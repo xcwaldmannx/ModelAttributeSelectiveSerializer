@@ -11,7 +11,8 @@ endif()
 
 set(CMAKE_CXX_STANDARD 20)
 
-project ("SelectiveModelAttributeExporter")
+set(PROJECT_NAME ModelAttributeSelectiveSerializer)
+project (${PROJECT_NAME})
 
 # Include sub-projects.
-add_subdirectory ("SelectiveModelAttributeExporter")
+add_subdirectory (${PROJECT_NAME})

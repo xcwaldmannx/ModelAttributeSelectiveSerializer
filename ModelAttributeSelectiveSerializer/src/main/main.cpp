@@ -3,8 +3,10 @@
 
 #include <string>
 
-#include "ModelLoader.h"
-#include "ModelExporter.h"
+#include "Importer.h"
+#include "Exporter.h"
+#include "Serializer.h"
+#include "Deserializer.h"
 
 namespace fs = std::filesystem;
 
@@ -80,14 +82,18 @@ int main()
 	}
 
 	Model model;
+	std::string data;
 
-	ModelLoader loader;
-	loader.load(modelFilepath, &model, flags);
+	Importer importer;
+	importer.load(modelFilepath, &model, flags);
 
-	ModelExporter exporter;
-	exporter.exportModel(outputFilename, outputFilepath, &model);
+	Serializer serializer;
+	serializer.serialize(outputFilename, outputFilepath, &model, &data);
 
-	std::cout << "Successfully exported file.\n";
+	Exporter exporter;
+	exporter.save(outputFilename, outputFilepath, data);
+
+	std::cout << "Successfully saved file.\n";
 
 	return 0;
 }

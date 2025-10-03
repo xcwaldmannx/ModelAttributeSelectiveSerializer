@@ -59,7 +59,7 @@ struct Model
     // TODO: std::vector<Animation> mAnimations{};
 };
 
-class ModelLoader
+class Importer
 {
 public:
 	void load(std::string filepath, Model* model, uint32_t flags)
