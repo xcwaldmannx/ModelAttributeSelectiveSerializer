@@ -3,10 +3,10 @@
 
 #include <string>
 
-#include "Importer.h"
-#include "Exporter.h"
-#include "Serializer.h"
-#include "Deserializer.h"
+#include "../main/Importer.h"
+#include "../main/Exporter.h"
+#include "../main/Serializer.h"
+#include "../main/Deserializer.h"
 
 namespace fs = std::filesystem;
 
@@ -48,9 +48,9 @@ int main()
 	// get model attributes
 	std::string attributes;
 	std::cout <<
-		"[1] HAS_NORMALS\n"    <<
-		"[2] HAS_COLORS\n"     <<
-		"[3] HAS_TEXCOORDS\n"  <<
+		"[1] HAS_NORMALS\n" <<
+		"[2] HAS_COLORS\n" <<
+		"[3] HAS_TEXCOORDS\n" <<
 		"[4] HAS_TRANSFORMS\n" <<
 		"[5] HAS_ANIMATIONS\n" <<
 		"Select attributes for this model (space separated):\n";
@@ -82,18 +82,26 @@ int main()
 	}
 
 	Model model;
-	std::string data;
 
 	Importer importer;
 	importer.load(modelFilepath, &model, flags);
 
+	std::string data;
+
 	Serializer serializer;
-	serializer.serialize(outputFilename, outputFilepath, &model, &data);
+	serializer.serialize(&model, &data);
 
 	Exporter exporter;
 	exporter.save(outputFilename, outputFilepath, data);
 
 	std::cout << "Successfully saved file.\n";
+
+	nlohmann::json json;
+
+	Deserializer deserializer;
+	deserializer.deserialize(outputFilename, outputFilepath, &json);
+
+	std::cout << json.dump() << "\n";
 
 	return 0;
 }
