@@ -3,10 +3,13 @@
 
 #include <string>
 
+#include "../main/Configuration.h"
 #include "../main/Importer.h"
 #include "../main/Exporter.h"
 #include "../main/Serializer.h"
 #include "../main/Deserializer.h"
+
+#include "../main/ModelObject.h"
 
 namespace fs = std::filesystem;
 
@@ -28,10 +31,10 @@ void exportModel(const std::string& outputFilename, const std::string& outputFil
 	exporter.save(outputFilename, outputFilepath, data);
 }
 
-void deserializeModel(const std::string& outputFilename, const std::string& outputFilepath, nlohmann::json* json)
+ModelObject deserializeModel(const std::string& outputFilename, const std::string& outputFilepath)
 {
 	Deserializer deserializer;
-	deserializer.deserialize(outputFilename, outputFilepath, json);
+	return deserializer.deserialize(outputFilename, outputFilepath);
 }
 
 void runTest()
@@ -58,17 +61,30 @@ void runTest()
 
 	exportModel(outputFilename, outputFilepath, data);
 
-	nlohmann::json json;
-
-	deserializeModel(outputFilename, outputFilepath, &json);
-
-	std::cout << json.dump(2) << "\n";
+	ModelObject modelobj = deserializeModel(outputFilename, outputFilepath);
 
 	std::cout << "Done. Close Window.";
+}
+
+void runTestConfig()
+{
+	Configuration config;
+	config.mSizePosition = TypeSize::UINT32;
+	config.mSizeNormal   = TypeSize::UINT32;
+	config.mHasNormals    = true;
+	config.mHasColors     = false;
+	config.mHasTexCoords  = true;
+	config.mHasTransforms = true;
+	config.mHasAnimations = false;
+
+	std::string inputFilepath  = "C:/Users/xcwal/Documents/Models/testmodel0.fbx";
+	std::string outputFilepath = "./";
+	std::string outputFilename = "testmodel.model";
 }
 
 int main()
 {
 	runTest();
+
 	return 0;
 }

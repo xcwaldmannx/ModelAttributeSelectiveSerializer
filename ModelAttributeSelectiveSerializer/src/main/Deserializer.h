@@ -1,11 +1,12 @@
 #pragma once
 
+#include "ModelObject.h"
+
 #include <string>
 
-#include <nlohmann/json.hpp>
 
 class Deserializer
 {
 public:
-	void deserialize(const std::string& filename, const std::string& filepath, nlohmann::json* json);
+	ModelObject deserialize(const std::string& filename, const std::string& filepath);
 };

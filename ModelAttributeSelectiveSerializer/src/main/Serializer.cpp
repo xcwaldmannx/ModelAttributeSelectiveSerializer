@@ -52,7 +52,7 @@ void Serializer::serialize(Model* model, std::string* data)
 			json["vertices"][vIndex].push_back(color.x);
 			json["vertices"][vIndex].push_back(color.y);
 			json["vertices"][vIndex].push_back(color.z);
-			json["vertices"][vIndex].push_back(color.z);
+			json["vertices"][vIndex].push_back(color.w);
 		}
 
 		if (model->mFlags & HAS_TEXCOORDS)

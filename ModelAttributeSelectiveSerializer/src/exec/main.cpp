@@ -96,12 +96,8 @@ int main()
 
 	std::cout << "Successfully saved file.\n";
 
-	nlohmann::json json;
-
 	Deserializer deserializer;
-	deserializer.deserialize(outputFilename, outputFilepath, &json);
-
-	std::cout << json.dump() << "\n";
+	ModelObject modelobj = deserializer.deserialize(outputFilename, outputFilepath);
 
 	return 0;
 }
