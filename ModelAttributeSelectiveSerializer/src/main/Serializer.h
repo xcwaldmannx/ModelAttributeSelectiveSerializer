@@ -1,12 +1,20 @@
 #pragma once
 
-#include "Importer.h"
+#include "Model/Model.h"
+#include "Configuration.h"
 
 #include <string>
 
-
-class Serializer
+namespace mass
 {
-public:
-	void serialize(Model* model, std::string* data);
-};
+
+	class Serializer
+	{
+	public:
+		void serialize(
+			const Configuration& config,
+			Model& model,
+			const std::string& outputFilepath);
+	};
+
+}

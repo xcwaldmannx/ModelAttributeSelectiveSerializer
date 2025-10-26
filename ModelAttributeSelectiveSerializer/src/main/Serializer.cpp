@@ -1,44 +1,50 @@
 #include "Serializer.h"
 
+#include "FileHandler/FileHandler.h"
+
 #include <iostream>
 #include <stdexcept>
 
 #include <nlohmann/json.hpp>
 
+using namespace mass;
+
 namespace fs = std::filesystem;
 
-void Serializer::serialize(Model* model, std::string* data)
+void Serializer::serialize(
+	const Configuration& config,
+	Model& model,
+	const std::string& outputFilepath)
 {
 	nlohmann::json json;
 	json["version"] = "1.0.0";
 
-	json["flags"] =
-	{
-		{ "HAS_NORMALS",    (model->mFlags & HAS_NORMALS) != 0 },
-		{ "HAS_COLORS",     (model->mFlags & HAS_COLORS) != 0 },
-		{ "HAS_TEXCOORDS",  (model->mFlags & HAS_TEXCOORDS) != 0 },
-		{ "HAS_TRANSFORMS", (model->mFlags & HAS_TRANSFORMS) != 0 },
-		{ "HAS_ANIMATIONS", (model->mFlags & HAS_ANIMATIONS) != 0 }
-	};
+	json["flags"] = nlohmann::json::object();
+	json["flags"].push_back({ "hasNormals",    (config.mHasNormals)    ? true : false });
+	json["flags"].push_back({ "hasColors",     (config.mHasColors)     ? true : false });
+	json["flags"].push_back({ "hasTexCoords",  (config.mHasTexCoords)  ? true : false });
+	json["flags"].push_back({ "hasTransforms", (config.mHasTransforms) ? true : false });
+	json["flags"].push_back({ "hasAnimations", (config.mHasAnimations) ? true : false });
 
-	json["vertexStride"] = model->mVertexStrideBytes;
+	json["vertexStride"] = config.mVertexStride.size();
 
-	json["vertexCount"] = model->mVertices.size();
-	json["indexCount"] = model->mIndices.size();
-	json["transformCount"] = model->mTransforms.size();
+	json["vertexCount"] = model.mVertices.size();
+	json["indexCount"] = model.mIndices.size();
+	json["transformCount"] = model.mTransforms.size();
+	json["animationCount"] = model.mAnimations.size();
 
 	json["vertices"] = nlohmann::json::array();
 
-	for (unsigned int vIndex = 0; vIndex < model->mVertices.size(); vIndex++)
+	for (unsigned int vIndex = 0; vIndex < model.mVertices.size(); vIndex++)
 	{
-		auto& vertex = model->mVertices[vIndex];
+		auto& vertex = model.mVertices[vIndex];
 		auto& position = vertex.mPosition;
 
 		json["vertices"][vIndex].push_back(position.x);
 		json["vertices"][vIndex].push_back(position.y);
 		json["vertices"][vIndex].push_back(position.z);
 
-		if (model->mFlags & HAS_NORMALS)
+		if (config.mHasNormals)
 		{
 			auto& normal = vertex.mNormal;
 			json["vertices"][vIndex].push_back(normal.x);
@@ -46,7 +52,7 @@ void Serializer::serialize(Model* model, std::string* data)
 			json["vertices"][vIndex].push_back(normal.z);
 		}
 
-		if (model->mFlags & HAS_COLORS)
+		if (config.mHasColors)
 		{
 			auto& color = vertex.mColor;
 			json["vertices"][vIndex].push_back(color.x);
@@ -55,7 +61,7 @@ void Serializer::serialize(Model* model, std::string* data)
 			json["vertices"][vIndex].push_back(color.w);
 		}
 
-		if (model->mFlags & HAS_TEXCOORDS)
+		if (config.mHasTexCoords)
 		{
 			auto& texcoord = vertex.mTexCoord;
 			json["vertices"][vIndex].push_back(texcoord.x);
@@ -63,15 +69,15 @@ void Serializer::serialize(Model* model, std::string* data)
 		}
 	}
 
-	json["indices"] = model->mIndices;
+	json["indices"] = model.mIndices;
 
-	if (model->mFlags & HAS_TRANSFORMS)
+	if (config.mHasTransforms)
 	{
 		json["transforms"] = nlohmann::json::array();
 
-		for (unsigned int transform = 0; transform < model->mTransforms.size(); transform++)
+		for (unsigned int transform = 0; transform < model.mTransforms.size(); transform++)
 		{
-			auto& trans = model->mTransforms[transform];
+			auto& trans = model.mTransforms[transform];
 			nlohmann::json t = nlohmann::json::array();
 
 			for (int c = 0; c < 4; ++c) {
@@ -84,7 +90,7 @@ void Serializer::serialize(Model* model, std::string* data)
 		}
 	}
 
-	if (model->mFlags & HAS_ANIMATIONS)
+	if (config.mHasAnimations)
 	{
 		// TODO: serialize animations
 	}
@@ -92,10 +98,10 @@ void Serializer::serialize(Model* model, std::string* data)
 	// get sub-mesh data
 	json["meshes"] = nlohmann::json::object();
 
-	for (auto meshes = model->mMeshes.begin(); meshes != model->mMeshes.end(); meshes++)
+	for (auto meshes = model.mMeshes.begin(); meshes != model.mMeshes.end(); meshes++)
 	{
 		std::string name = meshes->first;
-		Mesh& mesh = meshes->second;
+		const Mesh& mesh = meshes->second;
 
 		json["meshes"][name] =
 		{
@@ -107,5 +113,8 @@ void Serializer::serialize(Model* model, std::string* data)
 		};
 	}
 
-	*data = json.dump();
+	std::string data = json.dump(2);
+
+	FileHandler fileHandler;
+	fileHandler.write(data, outputFilepath);
 }
