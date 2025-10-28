@@ -2,38 +2,59 @@
 
 #include <cstdint>
 
+#include <string>
+#include <vector>
+
 namespace mass
 {
+	inline constexpr std::string_view API_VERSION = "1.1.0";
 
-	enum class TypeSize
+	inline constexpr std::string_view VERSION = "version";
+
+	inline constexpr std::string_view VERTEX_LAYOUT = "vertexLayout";
+	inline constexpr std::string_view VERTEX_STRIDE = "vertexStride";
+
+	inline constexpr std::string_view VERTEX_COUNT    = "vertexCount";
+	inline constexpr std::string_view INDEX_COUNT     = "indexCount";
+	inline constexpr std::string_view TRANSFORM_COUNT = "transformCount";
+	inline constexpr std::string_view ANIMATION_COUNT = "animationCount";
+
+	inline constexpr std::string_view VERTICES   = "vertices";
+	inline constexpr std::string_view INDICES    = "indices";
+	inline constexpr std::string_view TRANSFORMS = "transforms";
+	inline constexpr std::string_view ANIMATIONS = "animations";
+	inline constexpr std::string_view MESHES     = "meshes";
+
+	inline constexpr std::string_view FLAGS          = "flags";
+	inline constexpr std::string_view HAS_NORMALS    = "hasNormals";
+	inline constexpr std::string_view HAS_COLORS     = "hasColors";
+	inline constexpr std::string_view HAS_TEXCOORDS  = "hasTexCoords";
+	inline constexpr std::string_view HAS_TRANSFORMS = "hasTransforms";
+	inline constexpr std::string_view HAS_ANIMATIONS = "hasAnimations";
+
+	struct VertexAttribute
 	{
-		NO_TYPE = 0x00,
-		VEC1    = 0x01,
-		VEC2    = 0x02,
-		VEC3    = 0x03,
-		VEC4    = 0x04,
+		size_t mComponentCount = 0;
+		size_t mComponentSize = 0;
+		size_t mOffset = 0;
 	};
 
-	struct VertexStride
+	struct VertexLayout
 	{
-		uint32_t size() const
-		{
-			return
-				(static_cast<uint32_t>(mPosition) * 4) +
-				(static_cast<uint32_t>(mNormal)   * 4) +
-				(static_cast<uint32_t>(mColor)    * 4) +
-				(static_cast<uint32_t>(mTexCoord) * 4);
-		}
+		std::vector<VertexAttribute> mAttributes;
+		size_t mStride = 0;
+	};
 
-		TypeSize mPosition = TypeSize::NO_TYPE;
-		TypeSize mNormal   = TypeSize::NO_TYPE;
-		TypeSize mColor    = TypeSize::NO_TYPE;
-		TypeSize mTexCoord = TypeSize::NO_TYPE;
+	struct ModelLayout
+	{
+		VertexLayout mVertexLayout;
+		std::vector<float> mVertices;
+		std::vector<uint32_t> mIndices;
 	};
 
 	struct Configuration
 	{
-		VertexStride mVertexStride{};
+		VertexLayout mVertexLayout{};
 
 		bool mHasNormals    = false;
 		bool mHasColors     = false;

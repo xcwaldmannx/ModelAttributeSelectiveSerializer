@@ -6,6 +6,7 @@
 #include <string>
 
 #include <assimp/scene.h>
+#include <nlohmann/json.hpp>
 
 namespace mass
 {
@@ -13,7 +14,9 @@ namespace mass
 	class FileHandler
 	{
 	public:
-		Model read(const Configuration& config, const std::string& filepath);
+		Model readModel(const Configuration& config, const std::string& filepath);
+		nlohmann::json readSerialized(const Configuration& config, const std::string& filepath);
+
 		void write(const std::string& data, const std::string& filepath);
 
 	private:

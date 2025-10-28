@@ -1,9 +1,9 @@
+#include "../main/Mass.h"
+
 #include <filesystem>
 #include <iostream>
 
 #include <string>
-
-#include "../main/ModelAttributeSelectiveSerializer.h"
 
 using namespace mass;
 
@@ -49,9 +49,13 @@ int main()
 	std::string token;
 
 	Configuration config{};
-	config.mVertexStride.mPosition = TypeSize::VEC3;
-	config.mVertexStride.mNormal   = TypeSize::VEC3;
-	config.mVertexStride.mTexCoord = TypeSize::VEC2;
+	config.mVertexLayout.mAttributes =
+	{
+		{ 3, sizeof(float), 0 },
+		{ 3, sizeof(float), sizeof(float) * 3 },
+		{ 2, sizeof(float), sizeof(float) * 6 }
+	};
+	config.mVertexLayout.mStride = sizeof(float) * 8;
 
 	while (iss >> token) {
 		try {
@@ -72,8 +76,7 @@ int main()
 		}
 	}
 
-	ModelAttributeSelectiveSerializer mass;
-	mass.serialize(config, inputFilepath, outputFilepath);
+	mass::serialize(config, inputFilepath, outputFilepath);
 
 	return 0;
 }

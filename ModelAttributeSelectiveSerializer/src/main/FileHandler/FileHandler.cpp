@@ -14,7 +14,7 @@ using namespace mass;
 
 namespace fs = std::filesystem;
 
-Model FileHandler::read(const Configuration& config, const std::string& filepath)
+Model FileHandler::readModel(const Configuration& config, const std::string& filepath)
 {
     if (!fs::exists(fs::path(filepath)))
     {
@@ -37,6 +37,27 @@ Model FileHandler::read(const Configuration& config, const std::string& filepath
     processNodes(rootNode, meshes, model, config);
 
 	return model;
+}
+
+nlohmann::json FileHandler::readSerialized(const Configuration& config, const std::string& filepath)
+{
+    if (!fs::exists(fs::path(filepath)))
+    {
+        throw std::runtime_error("File does not exist!");
+    }
+
+    std::ifstream ifs(filepath);
+
+    std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+
+    nlohmann::json json = nlohmann::json::parse(content, nullptr, false);
+
+    if (json.is_discarded())
+    {
+        throw std::runtime_error("Could not parse file!");
+    }
+
+    return json;
 }
 
 void FileHandler::write(const std::string& data, const std::string& filepath)
@@ -121,7 +142,7 @@ void FileHandler::processNodes(aiNode* node, aiMesh** meshes, Model& model, cons
 
         if (vertexOffset + vertexCount >= UINT32_MAX)
         {
-            throw std::runtime_error("Too many vertices for uint16_t indexing.");
+            throw std::runtime_error("Too many vertices for uint32_t indexing.");
         }
 
         // Transform
