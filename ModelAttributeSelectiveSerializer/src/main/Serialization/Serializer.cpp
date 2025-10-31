@@ -91,17 +91,14 @@ void Serializer::serialize(
 		for (unsigned int transform = 0; transform < model.mTransforms.size(); transform++)
 		{
 			auto& trans = model.mTransforms[transform];
-			nlohmann::json t = nlohmann::json::array();
 
 			for (int c = 0; c < 4; ++c)
 			{
 				for (int r = 0; r < 4; ++r)
 				{
-					t.push_back(trans[c][r]);
+					json[TRANSFORMS].push_back(trans[c][r]);
 				}
 			}
-
-			json[TRANSFORMS].push_back(t);
 		}
 	}
 

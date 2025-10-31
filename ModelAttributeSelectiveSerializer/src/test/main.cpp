@@ -52,7 +52,6 @@ void runTest()
 	for (auto& pair : pairs)
 	{
 		mass::serialize(config, pair.first, pair.second);
-
 	}
 
 	// mass::deserialize(config, outputFilepath);
