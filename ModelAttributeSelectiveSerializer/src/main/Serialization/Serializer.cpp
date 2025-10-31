@@ -93,8 +93,10 @@ void Serializer::serialize(
 			auto& trans = model.mTransforms[transform];
 			nlohmann::json t = nlohmann::json::array();
 
-			for (int c = 0; c < 4; ++c) {
-				for (int r = 0; r < 4; ++r) {
+			for (int c = 0; c < 4; ++c)
+			{
+				for (int r = 0; r < 4; ++r)
+				{
 					t.push_back(trans[c][r]);
 				}
 			}
@@ -116,14 +118,13 @@ void Serializer::serialize(
 		std::string name = meshes->first;
 		const Mesh& mesh = meshes->second;
 
-		json[MESHES][name] =
-		{
-			mesh.mVertexOffset,
-			mesh.mVertexCount,
-			mesh.mIndexOffset,
-			mesh.mIndexCount,
-			mesh.mTransformOffset
-		};
+		json[MESHES][NAME] = nlohmann::json::object();
+
+		json[MESHES][NAME][VERTEX_OFFSET]    = mesh.mVertexOffset;
+		json[MESHES][NAME][VERTEX_COUNT]     = mesh.mVertexCount;
+		json[MESHES][NAME][INDEX_OFFSET]     = mesh.mIndexOffset;
+		json[MESHES][NAME][INDEX_COUNT]      = mesh.mIndexCount;
+		json[MESHES][NAME][TRANSFORM_OFFSET] = mesh.mTransformOffset;
 	}
 
 	std::string data = json.dump(2);

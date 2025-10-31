@@ -11,13 +11,22 @@ namespace mass
 
 	inline constexpr std::string_view VERSION = "version";
 
+	inline constexpr std::string_view NAME = "name";
+
 	inline constexpr std::string_view VERTEX_LAYOUT = "vertexLayout";
 	inline constexpr std::string_view VERTEX_STRIDE = "vertexStride";
 
-	inline constexpr std::string_view VERTEX_COUNT    = "vertexCount";
-	inline constexpr std::string_view INDEX_COUNT     = "indexCount";
-	inline constexpr std::string_view TRANSFORM_COUNT = "transformCount";
-	inline constexpr std::string_view ANIMATION_COUNT = "animationCount";
+	inline constexpr std::string_view VERTEX_OFFSET = "vertexOffset";
+	inline constexpr std::string_view VERTEX_COUNT  = "vertexCount";
+
+	inline constexpr std::string_view INDEX_OFFSET = "indexOffset";
+	inline constexpr std::string_view INDEX_COUNT  = "indexCount";
+
+	inline constexpr std::string_view TRANSFORM_OFFSET = "transformOffset";
+	inline constexpr std::string_view TRANSFORM_COUNT  = "transformCount";
+
+	inline constexpr std::string_view ANIMATION_OFFSET = "animationOffset";
+	inline constexpr std::string_view ANIMATION_COUNT  = "animationCount";
 
 	inline constexpr std::string_view VERTICES   = "vertices";
 	inline constexpr std::string_view INDICES    = "indices";
@@ -45,11 +54,23 @@ namespace mass
 		size_t mStride = 0;
 	};
 
+	struct MeshLayout
+	{
+		std::string mName;
+		size_t mVertexOffset    = 0;
+		size_t mVertexCount     = 0;
+		size_t mIndexOffset     = 0;
+		size_t mIndexCount      = 0;
+		size_t mTransformOffset = 0;
+	};
+
 	struct ModelLayout
 	{
 		VertexLayout mVertexLayout;
+		std::vector<MeshLayout> mMeshLayouts;
 		std::vector<float> mVertices;
 		std::vector<uint32_t> mIndices;
+		std::vector<float> mTransforms;
 	};
 
 	struct Configuration
