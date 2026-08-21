@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include <array>
+
 using namespace mass;
 
 ModelLayout Deserializer::deserialize(const Configuration& config, nlohmann::json& json)
@@ -51,18 +53,35 @@ ModelLayout Deserializer::deserialize(const Configuration& config, nlohmann::jso
 	modelLayout.mIndices = json[INDICES].get<std::vector<uint32_t>>();
 	modelLayout.mTransforms = json[TRANSFORMS].get<std::vector<float>>();
 
+	auto modelBoundsPos = json[BOUNDS_POS].get<std::array<float, 3>>();
+	modelLayout.mBoundsPos = glm::vec3(modelBoundsPos[0], modelBoundsPos[1], modelBoundsPos[2]);
+
+	auto modelBoundsNeg = json[BOUNDS_NEG].get<std::array<float, 3>>();
+	modelLayout.mBoundsNeg = glm::vec3(modelBoundsNeg[0], modelBoundsNeg[1], modelBoundsNeg[2]);
+
 	// get meshes
 	nlohmann::json& jsonMeshes = json[MESHES];
 
-	for (auto& mesh : jsonMeshes)
+	for (auto it = jsonMeshes.begin(); it != jsonMeshes.end(); ++it)
 	{
+		const std::string& name = it.key();
+		nlohmann::json& meshObj = it.value();
+
 		MeshLayout meshLayout;
-		meshLayout.mName = mesh[NAME].get<std::string>();
-		meshLayout.mVertexOffset    = mesh[NAME][VERTEX_OFFSET].get<uint32_t>();
-		meshLayout.mVertexCount     = mesh[NAME][VERTEX_COUNT].get<uint32_t>();
-		meshLayout.mIndexOffset     = mesh[NAME][INDEX_OFFSET].get<uint32_t>();
-		meshLayout.mIndexCount      = mesh[NAME][INDEX_COUNT].get<uint32_t>();
-		meshLayout.mTransformOffset = mesh[NAME][TRANSFORM_OFFSET].get<uint32_t>();
+		meshLayout.mName = name;
+
+		meshLayout.mVertexOffset    = meshObj[VERTEX_OFFSET].get<uint32_t>();
+		meshLayout.mVertexCount     = meshObj[VERTEX_COUNT].get<uint32_t>();
+		meshLayout.mIndexOffset     = meshObj[INDEX_OFFSET].get<uint32_t>();
+		meshLayout.mIndexCount      = meshObj[INDEX_COUNT].get<uint32_t>();
+		meshLayout.mTransformOffset = meshObj[TRANSFORM_OFFSET].get<uint32_t>();
+
+		auto boundsPos = meshObj[BOUNDS_POS].get<std::array<float, 3>>();
+		meshLayout.mBoundsPos = glm::vec3(boundsPos[0], boundsPos[1], boundsPos[2]);
+
+		auto boundsNeg = meshObj[BOUNDS_NEG].get<std::array<float, 3>>();
+		meshLayout.mBoundsNeg = glm::vec3(boundsNeg[0], boundsNeg[1], boundsNeg[2]);
+
 		modelLayout.mMeshLayouts.emplace_back(std::move(meshLayout));
 	}
 

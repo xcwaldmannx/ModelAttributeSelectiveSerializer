@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace fs = std::filesystem;
+#define LINUX
 
 void runTest()
 {
@@ -23,19 +23,44 @@ void runTest()
 	config.mHasTransforms = true;
 	config.mHasAnimations = false;
 
+#ifdef LINUX
+	std::string inputPath = "/home/cwaldmann/Documents/BlenderModels/";
+	std::string outputPath = "/home/cwaldmann/Documents/BlenderModels/";
+#elifdef WINDOWS
 	std::string inputPath = "C:/Users/xcwal/source/repos/CrossPlatformGameEngine/CrossPlatformGameEngine/res/blender/";
 	std::string outputPath = "C:/Users/xcwal/source/repos/CrossPlatformGameEngine/CrossPlatformGameEngine/res/models/";
+#endif
+
+	std::pair<std::string, std::string> submarine =
+	{
+		inputPath + "submarine.fbx",
+		outputPath + "submarine.model"
+	};
+
+	std::pair<std::string, std::string> test =
+	{
+		inputPath + "test.fbx",
+		outputPath + "test.model"
+	};
+
+	std::pair<std::string, std::string> sphere =
+	{
+		inputPath + "sphere.fbx",
+		outputPath + "sphere.model"
+	};
 
 	std::pair<std::string, std::string> prism =
 	{
 		inputPath + "prism.fbx",
 		outputPath + "prism.model"
 	};
+
 	std::pair<std::string, std::string> shapes =
 	{
 		inputPath + "shapes.fbx",
 		outputPath + "shapes.model"
 	};
+
 	std::pair<std::string, std::string> windmill =
 	{
 		inputPath + "windmill.fbx",
@@ -44,18 +69,22 @@ void runTest()
 
 	std::vector<std::pair<std::string, std::string>> pairs =
 	{
-		prism,
-		shapes,
-		windmill
+		submarine,
+		test,
+		sphere
+		//prism,
+		//shapes,
+		//windmill
 	};
 
-	for (auto& pair : pairs)
+	for (auto& [in, out] : pairs)
 	{
-		mass::serialize(config, pair.first, pair.second);
+		mass::serialize(config, in, out);
+		auto model = mass::deserialize(config, out);
 	}
-
-	// mass::deserialize(config, outputFilepath);
 }
+
+namespace fs = std::filesystem;
 
 int main()
 {

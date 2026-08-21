@@ -86,6 +86,10 @@ void FileHandler::processNodes(aiNode* node, aiMesh** meshes, Model& model, cons
         size_t transformOffset = model.mTransforms.size();
 
         // Extract vertices
+
+        glm::vec3 boundsPos = glm::vec3(0);
+        glm::vec3 boundsNeg = glm::vec3(0);
+
         for (unsigned int vIndex = 0; vIndex < mesh->mNumVertices; vIndex++)
         {
             Vertex vert{};
@@ -94,6 +98,22 @@ void FileHandler::processNodes(aiNode* node, aiMesh** meshes, Model& model, cons
                 mesh->mVertices[vIndex].y,
                 mesh->mVertices[vIndex].z
             );
+
+            if (vert.mPosition.x > boundsPos.x) boundsPos.x = vert.mPosition.x;
+            if (vert.mPosition.y > boundsPos.y) boundsPos.y = vert.mPosition.y;
+            if (vert.mPosition.z > boundsPos.z) boundsPos.z = vert.mPosition.z;
+
+            if (vert.mPosition.x < boundsNeg.x) boundsNeg.x = vert.mPosition.x;
+            if (vert.mPosition.y < boundsNeg.y) boundsNeg.y = vert.mPosition.y;
+            if (vert.mPosition.z < boundsNeg.z) boundsNeg.z = vert.mPosition.z;
+
+            if (vert.mPosition.x > model.mBoundsPos.x) model.mBoundsPos.x = vert.mPosition.x;
+            if (vert.mPosition.y > model.mBoundsPos.y) model.mBoundsPos.y = vert.mPosition.y;
+            if (vert.mPosition.z > model.mBoundsPos.z) model.mBoundsPos.z = vert.mPosition.z;
+
+            if (vert.mPosition.x < model.mBoundsNeg.x) model.mBoundsNeg.x = vert.mPosition.x;
+            if (vert.mPosition.y < model.mBoundsNeg.y) model.mBoundsNeg.y = vert.mPosition.y;
+            if (vert.mPosition.z < model.mBoundsNeg.z) model.mBoundsNeg.z = vert.mPosition.z;
 
             if (mesh->HasNormals() && (config.mHasNormals))
             {
@@ -123,7 +143,7 @@ void FileHandler::processNodes(aiNode* node, aiMesh** meshes, Model& model, cons
                 );
             }
 
-            model.mVertices.emplace_back(std::move(vert));
+            model.mVertices.push_back(vert);
         }
 
         // Extract indices
@@ -133,7 +153,7 @@ void FileHandler::processNodes(aiNode* node, aiMesh** meshes, Model& model, cons
             for (unsigned int j = 0; j < face.mNumIndices; j++)
             {
                 uint32_t index = face.mIndices[j] + vertexOffset;
-                model.mIndices.emplace_back(std::move(index));
+                model.mIndices.push_back(index);
             }
         }
 
@@ -158,11 +178,11 @@ void FileHandler::processNodes(aiNode* node, aiMesh** meshes, Model& model, cons
                 { t.a4, t.b4, t.c4, t.d4 },
             };
 
-            model.mTransforms.emplace_back(std::move(transform));
+            model.mTransforms.push_back(transform);
         }
 
         // Store mesh instance
-        std::cout << "Loaded model " << mesh->mName.C_Str() << "\n";
+        std::cout << "Loaded mesh " << mesh->mName.C_Str() << "\n";
         model.mMeshes[mesh->mName.C_Str()] =
         {
             .mVertexOffset = vertexOffset,
@@ -170,6 +190,8 @@ void FileHandler::processNodes(aiNode* node, aiMesh** meshes, Model& model, cons
             .mIndexOffset = indexOffset,
             .mIndexCount = indexCount,
             .mTransformOffset = transformOffset,
+            .mBoundsPos = boundsPos,
+            .mBoundsNeg = boundsNeg,
         };
     }
 

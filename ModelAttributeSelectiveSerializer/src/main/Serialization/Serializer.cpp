@@ -82,6 +82,9 @@ void Serializer::serialize(
 		}
 	}
 
+	json[BOUNDS_POS] = { model.mBoundsPos.x, model.mBoundsPos.y, model.mBoundsPos.z };
+	json[BOUNDS_NEG] = { model.mBoundsNeg.x, model.mBoundsNeg.y, model.mBoundsNeg.z };
+
 	json[INDICES] = model.mIndices;
 
 	if (config.mHasTransforms)
@@ -110,21 +113,22 @@ void Serializer::serialize(
 	// get sub-mesh data
 	json[MESHES] = nlohmann::json::object();
 
-	for (auto meshes = model.mMeshes.begin(); meshes != model.mMeshes.end(); meshes++)
+	for (auto &[name, mesh] : model.mMeshes)
 	{
-		std::string name = meshes->first;
-		const Mesh& mesh = meshes->second;
+		json[MESHES][name] = nlohmann::json::object();
 
-		json[MESHES][NAME] = nlohmann::json::object();
+		auto& namedMesh = json[MESHES][name];
 
-		json[MESHES][NAME][VERTEX_OFFSET]    = mesh.mVertexOffset;
-		json[MESHES][NAME][VERTEX_COUNT]     = mesh.mVertexCount;
-		json[MESHES][NAME][INDEX_OFFSET]     = mesh.mIndexOffset;
-		json[MESHES][NAME][INDEX_COUNT]      = mesh.mIndexCount;
-		json[MESHES][NAME][TRANSFORM_OFFSET] = mesh.mTransformOffset;
+		namedMesh[VERTEX_OFFSET]    = mesh.mVertexOffset;
+		namedMesh[VERTEX_COUNT]     = mesh.mVertexCount;
+		namedMesh[INDEX_OFFSET]     = mesh.mIndexOffset;
+		namedMesh[INDEX_COUNT]      = mesh.mIndexCount;
+		namedMesh[TRANSFORM_OFFSET] = mesh.mTransformOffset;
+		namedMesh[BOUNDS_POS]       = { mesh.mBoundsPos.x, mesh.mBoundsPos.y, mesh.mBoundsPos.z };
+		namedMesh[BOUNDS_NEG]       = { mesh.mBoundsNeg.x, mesh.mBoundsNeg.y, mesh.mBoundsNeg.z };
 	}
 
-	std::string data = json.dump(2);
+	const std::string data = json.dump(2);
 
 	FileHandler fileHandler;
 	fileHandler.write(data, outputFilepath);
