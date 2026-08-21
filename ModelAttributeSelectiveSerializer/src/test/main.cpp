@@ -1,86 +1,90 @@
+#include "../main/Mass.h"
+
 #include <filesystem>
 #include <iostream>
 
 #include <string>
 
-#include "../main/Configuration.h"
-#include "../main/Importer.h"
-#include "../main/Exporter.h"
-#include "../main/Serializer.h"
-#include "../main/Deserializer.h"
-
-#include "../main/ModelObject.h"
-
-namespace fs = std::filesystem;
-
-void loadFile(const std::string& filepath, Model* model, uint32_t flags)
-{
-	Importer importer;
-	importer.load(filepath, model, flags);
-}
-
-void serializeModel(Model* model, std::string* data)
-{
-	Serializer serializer;
-	serializer.serialize(model, data);
-}
-
-void exportModel(const std::string& outputFilename, const std::string& outputFilepath, const std::string& data)
-{
-	Exporter exporter;
-	exporter.save(outputFilename, outputFilepath, data);
-}
-
-ModelObject deserializeModel(const std::string& outputFilename, const std::string& outputFilepath)
-{
-	Deserializer deserializer;
-	return deserializer.deserialize(outputFilename, outputFilepath);
-}
+#define LINUX
 
 void runTest()
 {
-	std::string filepath;
-	std::cout << "Enter a model filepath:\n";
-	std::cin >> filepath;
-	if (!std::filesystem::exists(std::filesystem::path(filepath)))
+	mass::Configuration config{};
+	config.mVertexLayout.mAttributes =
 	{
-		throw std::runtime_error("Bad filepath.");
-	}
-
-	std::string outputFilename = "test.model";
-	std::string outputFilepath = "./";
-
-	Model model;
-	uint32_t flags = HAS_NORMALS | HAS_TEXCOORDS | HAS_TRANSFORMS;
-
-	loadFile(filepath, &model, flags);
-
-	std::string data;
-
-	serializeModel(&model, &data);
-
-	exportModel(outputFilename, outputFilepath, data);
-
-	ModelObject modelobj = deserializeModel(outputFilename, outputFilepath);
-
-	std::cout << "Done. Close Window.";
-}
-
-void runTestConfig()
-{
-	Configuration config;
-	config.mSizePosition = TypeSize::UINT32;
-	config.mSizeNormal   = TypeSize::UINT32;
+		{ 3, sizeof(float), 0 },
+		{ 3, sizeof(float), sizeof(float) * 3 },
+		{ 2, sizeof(float), sizeof(float) * 6 }
+	};
+	config.mVertexLayout.mStride = sizeof(float) * 8;
 	config.mHasNormals    = true;
 	config.mHasColors     = false;
 	config.mHasTexCoords  = true;
 	config.mHasTransforms = true;
 	config.mHasAnimations = false;
 
-	std::string inputFilepath  = "C:/Users/xcwal/Documents/Models/testmodel0.fbx";
-	std::string outputFilepath = "./";
-	std::string outputFilename = "testmodel.model";
+#ifdef LINUX
+	std::string inputPath = "/home/cwaldmann/Documents/BlenderModels/";
+	std::string outputPath = "/home/cwaldmann/Documents/BlenderModels/";
+#elifdef WINDOWS
+	std::string inputPath = "C:/Users/xcwal/source/repos/CrossPlatformGameEngine/CrossPlatformGameEngine/res/blender/";
+	std::string outputPath = "C:/Users/xcwal/source/repos/CrossPlatformGameEngine/CrossPlatformGameEngine/res/models/";
+#endif
+
+	std::pair<std::string, std::string> submarine =
+	{
+		inputPath + "submarine.fbx",
+		outputPath + "submarine.model"
+	};
+
+	std::pair<std::string, std::string> test =
+	{
+		inputPath + "test.fbx",
+		outputPath + "test.model"
+	};
+
+	std::pair<std::string, std::string> sphere =
+	{
+		inputPath + "sphere.fbx",
+		outputPath + "sphere.model"
+	};
+
+	std::pair<std::string, std::string> prism =
+	{
+		inputPath + "prism.fbx",
+		outputPath + "prism.model"
+	};
+
+	std::pair<std::string, std::string> shapes =
+	{
+		inputPath + "shapes.fbx",
+		outputPath + "shapes.model"
+	};
+
+	std::pair<std::string, std::string> windmill =
+	{
+		inputPath + "windmill.fbx",
+		outputPath + "windmill.model"
+	};
+
+	std::vector<std::pair<std::string, std::string>> pairs =
+	{
+		submarine,
+		test,
+		sphere
+		//prism,
+		//shapes,
+		//windmill
+	};
+
+	for (auto& [in, out] : pairs)
+	{
+		mass::serialize(config, in, out);
+		auto model = mass::deserialize(config, out);
+	}
 }
+
+namespace fs = std::filesystem;
 
 int main()
 {
