@@ -4,28 +4,32 @@
 
 #include <string>
 #include <vector>
-#include <unordered_map>
 
 #include <assimp/scene.h>
 
 namespace mass
 {
 
-    class FileHandler
+    class ModelHandler
     {
     public:
-        static void load(const std::string& filename, Configuration& config, model::Model* model);
+        static model::Model load(const std::string& filename, Configuration& config);
 
     private:
         static void processScene(const aiScene* scene, model::Scene* modelScene);
         static void processNode(const aiNode* scene, model::Node* modelNode);
         static void processMesh(const aiMesh* mesh, model::Mesh* modelMesh);
 
-        static std::vector<model::Vertex> getVertices(const aiMesh* mesh);
-        static void processBones(const aiMesh* mesh, std::vector<model::Vertex>& vertices);
+        static std::pair<model::VertexArray, model::IndexArray> getVerticesAndIndices(const aiMesh* mesh);
+        static void processBones(const aiMesh* mesh, model::VertexArray& vertices);
 
     private:
         inline static model::Scene* sActiveModelScene = nullptr;
+        inline static model::Model* sActiveModel = nullptr;
+
+        inline static size_t sVertexOffset = 0;
+        inline static size_t sIndexOffset = 0;
+
         inline static aiAnimation** sSceneAnimations = nullptr;
         inline static aiCamera** sSceneCameras = nullptr;
         inline static aiLight** sSceneLights = nullptr;

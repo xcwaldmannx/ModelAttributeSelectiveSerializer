@@ -6,7 +6,7 @@
 
 namespace mass
 {
-    class FileHandler;
+    class ModelHandler;
 
     struct Configuration
     {
@@ -27,6 +27,11 @@ namespace mass
 
     namespace model
     {
+        struct Vertex;
+
+        using VertexArray = std::vector<Vertex>;
+        using IndexArray = std::vector<unsigned int>;
+
         constexpr unsigned int MAX_BONE_INFLUENCE = 4;
         constexpr unsigned int MAX_BONE_WEIGHTS   = 16;
 
@@ -63,9 +68,8 @@ namespace mass
 
         struct Mesh
         {
-            std::vector<Vertex> mVertices;
-            std::vector<unsigned int> mIndices;
             unsigned int mVertexOffset = 0;
+            unsigned int mVertexCount = 0;
             unsigned int mIndexOffset = 0;
             unsigned int mIndexCount = 0;
         };
@@ -85,7 +89,17 @@ namespace mass
 
         class Model
         {
-        private:
+        public:
+            const VertexArray& getVertices() const
+            {
+                return mVertices;
+            }
+
+            const IndexArray& getIndices() const
+            {
+                return mIndices;
+            }
+
             bool hasAnimations() const
             {
                 return mSceneElements & ANIMATION;
@@ -126,7 +140,57 @@ namespace mass
 
             std::unordered_map<std::string, Scene> mScenes;
 
-            friend class mass::FileHandler;
+            VertexArray mVertices;
+            IndexArray mIndices;
+
+            friend class mass::ModelHandler;
+        };
+    }
+
+    namespace anim
+    {
+        struct PositionKey
+        {
+            float mPosition[3] = {};
+            float mTimestamp;
+        };
+
+        struct RotationKey
+        {
+            float mRotation[4] = {};
+            float mTimestamp;
+        };
+
+        struct ScaleKey
+        {
+            float mScale[3] = {};
+            float mTimestamp;
+        };
+
+        struct Channel
+        {
+            std::vector<PositionKey> mKeyPositions;
+            std::vector<RotationKey> mKeyRotations;
+            std::vector<ScaleKey> mKeyScales;
+        };
+
+        struct Animation
+        {
+            float mDuration = 0;
+            float mTicksPerSecond = 0;
+            std::unordered_map<std::string, Channel> mChannels;
+        };
+
+        class AnimationSet
+        {
+        public:
+            const Animation& getAnimation(const std::string& name) const
+            {
+                return mAnimations.at(name);
+            }
+
+        private:
+            std::unordered_map<std::string, Animation> mAnimations;
         };
     }
 

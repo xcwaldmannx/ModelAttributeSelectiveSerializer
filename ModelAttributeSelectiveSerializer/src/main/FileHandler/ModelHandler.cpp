@@ -1,4 +1,4 @@
-#include "FileHandler.h"
+#include "ModelHandler.h"
 
 #include "../Model/Model.h"
 
@@ -14,7 +14,7 @@ using namespace mass;
 
 namespace fs = std::filesystem;
 
-Model FileHandler::readModel(const Configuration& config, const std::string& filepath)
+Model ModelHandler::readModel(const Configuration& config, const std::string& filepath)
 {
     if (!fs::exists(fs::path(filepath)))
     {
@@ -39,7 +39,7 @@ Model FileHandler::readModel(const Configuration& config, const std::string& fil
 	return model;
 }
 
-nlohmann::json FileHandler::readSerialized(const Configuration& config, const std::string& filepath)
+nlohmann::json ModelHandler::readSerialized(const Configuration& config, const std::string& filepath)
 {
     if (!fs::exists(fs::path(filepath)))
     {
@@ -60,7 +60,7 @@ nlohmann::json FileHandler::readSerialized(const Configuration& config, const st
     return json;
 }
 
-void FileHandler::write(const std::string& data, const std::string& filepath)
+void ModelHandler::write(const std::string& data, const std::string& filepath)
 {
     std::ofstream ofs(filepath);
     if (!ofs)
@@ -72,7 +72,7 @@ void FileHandler::write(const std::string& data, const std::string& filepath)
     ofs.close();
 }
 
-void FileHandler::processNodes(aiNode* node, aiMesh** meshes, Model& model, const Configuration& config)
+void ModelHandler::processNodes(aiNode* node, aiMesh** meshes, Model& model, const Configuration& config)
 {
     for (unsigned int i = 0; i < node->mNumMeshes; i++)
     {

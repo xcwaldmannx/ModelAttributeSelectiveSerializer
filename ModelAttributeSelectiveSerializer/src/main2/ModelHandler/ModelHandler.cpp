@@ -1,8 +1,7 @@
-#include "FileHandler.h"
+#include "ModelHandler.h"
 
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <stdexcept>
 
 #include <assimp/Importer.hpp>
@@ -12,8 +11,9 @@ namespace fs = std::filesystem;
 
 using namespace mass;
 
-void FileHandler::load(const std::string& filename, Configuration& config, model::Model* model)
+model::Model ModelHandler::load(const std::string& filename, Configuration& config)
 {
+
     if (!fs::exists(fs::path(filename)))
     {
         throw std::runtime_error("file does not exist");
@@ -27,13 +27,18 @@ void FileHandler::load(const std::string& filename, Configuration& config, model
         throw std::runtime_error("could not load scene");
     }
 
-    if (scene->HasAnimations()) model->mSceneElements |= ANIMATION;
-    if (scene->HasCameras())    model->mSceneElements |= CAMERA;
-    if (scene->HasLights())     model->mSceneElements |= LIGHT;
-    if (scene->HasMaterials())  model->mSceneElements |= MATERIAL;
-    if (scene->HasMeshes())     model->mSceneElements |= MESH;
-    if (scene->HasSkeletons())  model->mSceneElements |= SKELETON;
-    if (scene->HasTextures())   model->mSceneElements |= TEXTURE;
+    sActiveModel = new model::Model();
+
+    if (scene->HasAnimations()) sActiveModel->mSceneElements |= ANIMATION;
+    if (scene->HasCameras())    sActiveModel->mSceneElements |= CAMERA;
+    if (scene->HasLights())     sActiveModel->mSceneElements |= LIGHT;
+    if (scene->HasMaterials())  sActiveModel->mSceneElements |= MATERIAL;
+    if (scene->HasMeshes())     sActiveModel->mSceneElements |= MESH;
+    if (scene->HasSkeletons())  sActiveModel->mSceneElements |= SKELETON;
+    if (scene->HasTextures())   sActiveModel->mSceneElements |= TEXTURE;
+
+    sVertexOffset = 0;
+    sIndexOffset = 0;
 
     sSceneAnimations = scene->mAnimations;
     sSceneCameras    = scene->mCameras;
@@ -44,13 +49,14 @@ void FileHandler::load(const std::string& filename, Configuration& config, model
     sSceneTextures   = scene->mTextures;
 
     model::Scene modelScene;
-    const auto& sceneName = scene->mName.C_Str();
-    model->mScenes.emplace(sceneName, modelScene);
+    auto sceneName = scene->mName.C_Str();
 
-    sActiveModelScene = &model->mScenes.at(sceneName);
+    sActiveModel->mScenes.emplace(sceneName, modelScene);
+    sActiveModelScene = &sActiveModel->mScenes.at(sceneName);
 
     processScene(scene, &modelScene);
 
+    model::Model resultModel = *sActiveModel;
 
     sActiveModelScene = nullptr;
     sSceneTextures    = nullptr;
@@ -60,9 +66,17 @@ void FileHandler::load(const std::string& filename, Configuration& config, model
     sSceneLights      = nullptr;
     sSceneCameras     = nullptr;
     sSceneAnimations  = nullptr;
+
+    sIndexOffset = 0;
+    sVertexOffset = 0;
+
+    delete sActiveModel;
+    sActiveModel = nullptr;
+
+    return resultModel;
 }
 
-void FileHandler::processScene(const aiScene* scene, model::Scene* modelScene)
+void ModelHandler::processScene(const aiScene* scene, model::Scene* modelScene)
 {
     const auto& node = scene->mRootNode;
     model::Node modelNode;
@@ -72,7 +86,7 @@ void FileHandler::processScene(const aiScene* scene, model::Scene* modelScene)
 
 }
 
-void FileHandler::processNode(const aiNode* node, model::Node* modelNode)
+void ModelHandler::processNode(const aiNode* node, model::Node* modelNode)
 {
     const auto meshCount = node->mNumMeshes;
     const auto childNodeCount = node->mNumChildren;
@@ -98,25 +112,41 @@ void FileHandler::processNode(const aiNode* node, model::Node* modelNode)
     }
 }
 
-void FileHandler::processMesh(const aiMesh* mesh, model::Mesh* modelMesh)
+void ModelHandler::processMesh(const aiMesh* mesh, model::Mesh* modelMesh)
 {
     if (!mesh->HasPositions()) return;
 
-    modelMesh->mVertices = getVertices(mesh);
+    auto [vertices, indices] = getVerticesAndIndices(mesh);
+
+    modelMesh->mVertexOffset = sVertexOffset;
+    modelMesh->mVertexCount = vertices.size();
+
+    modelMesh->mIndexOffset = sIndexOffset;
+    modelMesh->mIndexCount = indices.size();
 
     if (mesh->HasBones())
     {
-        processBones(mesh, modelMesh->mVertices);
+        processBones(mesh, vertices);
     }
+
+    sActiveModel->mVertices.insert(sActiveModel->mVertices.end(), vertices.begin(), vertices.end());
+    sActiveModel->mIndices.insert(sActiveModel->mIndices.end(), indices.begin(), indices.end());
+
+    sVertexOffset += vertices.size();
+    sIndexOffset += indices.size();
 }
 
-std::vector<model::Vertex> FileHandler::getVertices(const aiMesh* mesh)
+std::pair<model::VertexArray, model::IndexArray> ModelHandler::getVerticesAndIndices(const aiMesh* mesh)
 {
     const unsigned int vertexCount = mesh->mNumVertices;
     const unsigned int indexCount = mesh->mNumFaces * 3;
 
-    std::vector<model::Vertex> vertices;
-    vertices.resize(vertexCount);
+    std::pair<model::VertexArray, model::IndexArray> verticesAndIndices = {};
+    verticesAndIndices.first.resize(vertexCount);
+    verticesAndIndices.second.reserve(indexCount);
+
+    auto& vertices = verticesAndIndices.first;
+    auto& indices = verticesAndIndices.second;
 
     for (unsigned int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++)
     {
@@ -168,23 +198,22 @@ std::vector<model::Vertex> FileHandler::getVertices(const aiMesh* mesh)
             modelVertex.mColor[3] = color.a;
         }
 
-        for (unsigned int f = 0; f < mesh->mNumFaces; f++)
-        {
-            const aiFace& face = mesh->mFaces[f];
-            for (unsigned int j = 0; j < face.mNumIndices; j++)
-            {
-                unsigned int index = face.mIndices[j] + vertexOffset;
-                modelVertex.mIndices.push_back(index);
-            }
-        }
-
         vertices[vertexIndex] = modelVertex;
     }
 
-    return vertices;
+    for (unsigned int f = 0; f < mesh->mNumFaces; f++)
+    {
+        const aiFace& face = mesh->mFaces[f];
+        for (unsigned int j = 0; j < face.mNumIndices; j++)
+        {
+            indices.push_back(face.mIndices[j]);
+        }
+    }
+
+    return verticesAndIndices;
 }
 
-void FileHandler::processBones(const aiMesh* mesh, std::vector<model::Vertex>& vertices)
+void ModelHandler::processBones(const aiMesh* mesh, model::VertexArray& vertices)
 {
     const unsigned int boneCount = mesh->mNumBones;
 
@@ -205,25 +234,15 @@ void FileHandler::processBones(const aiMesh* mesh, std::vector<model::Vertex>& v
             const auto& boneTrans = bone->mOffsetMatrix;
             auto& ModelBoneTrans = modelBone.mOffsetMatrix;
 
-            ModelBoneTrans[0][0] = boneTrans.a1;
-            ModelBoneTrans[0][1] = boneTrans.a2;
-            ModelBoneTrans[0][2] = boneTrans.a3;
-            ModelBoneTrans[0][3] = boneTrans.a4;
+            ModelBoneTrans[0][0] = boneTrans.a1; ModelBoneTrans[0][1] = boneTrans.b1;
+            ModelBoneTrans[1][0] = boneTrans.a2; ModelBoneTrans[1][1] = boneTrans.b2;
+            ModelBoneTrans[2][0] = boneTrans.a3; ModelBoneTrans[2][1] = boneTrans.b3;
+            ModelBoneTrans[3][0] = boneTrans.a4; ModelBoneTrans[3][1] = boneTrans.b4;
 
-            ModelBoneTrans[1][0] = boneTrans.b1;
-            ModelBoneTrans[1][1] = boneTrans.b2;
-            ModelBoneTrans[1][2] = boneTrans.b3;
-            ModelBoneTrans[1][3] = boneTrans.b4;
-
-            ModelBoneTrans[2][0] = boneTrans.c1;
-            ModelBoneTrans[2][1] = boneTrans.c2;
-            ModelBoneTrans[2][2] = boneTrans.c3;
-            ModelBoneTrans[2][3] = boneTrans.c4;
-
-            ModelBoneTrans[3][0] = boneTrans.d1;
-            ModelBoneTrans[3][1] = boneTrans.d2;
-            ModelBoneTrans[3][2] = boneTrans.d3;
-            ModelBoneTrans[3][3] = boneTrans.d4;
+            ModelBoneTrans[0][2] = boneTrans.c1; ModelBoneTrans[0][3] = boneTrans.d1;
+            ModelBoneTrans[1][2] = boneTrans.c2; ModelBoneTrans[1][3] = boneTrans.d2;
+            ModelBoneTrans[2][2] = boneTrans.c3; ModelBoneTrans[2][3] = boneTrans.d3;
+            ModelBoneTrans[3][2] = boneTrans.c4; ModelBoneTrans[3][3] = boneTrans.d4;
 
             boneId = modelBone.mBoneId;
             sActiveModelScene->mBones[boneName] = modelBone;

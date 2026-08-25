@@ -11,7 +11,7 @@
 namespace mass
 {
 
-	class FileHandler
+	class ModelHandler
 	{
 	public:
 		Model readModel(const Configuration& config, const std::string& filepath);
