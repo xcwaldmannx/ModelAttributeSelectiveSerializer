@@ -7,6 +7,7 @@
 namespace mass
 {
     class ModelHandler;
+    class AnimationHandler;
 
     struct Configuration
     {
@@ -191,6 +192,8 @@ namespace mass
 
         private:
             std::unordered_map<std::string, Animation> mAnimations;
+
+            friend class mass::AnimationHandler;
         };
     }
 

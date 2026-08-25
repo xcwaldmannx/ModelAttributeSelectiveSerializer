@@ -10,10 +10,11 @@ namespace mass
     class AnimationHandler
     {
     public:
-        static std::vector<anim::Animation> load(const std::string& filename, Configuration& config);
+        static anim::AnimationSet load(const std::string& filename, Configuration& config);
 
     private:
-        static anim::Animation processAnimation(aiAnimation* sceneAnim);
+        static void processAnimation(const aiAnimation* sceneAnim, anim::Animation* animation);
+        static void processChannel(const aiNodeAnim* nodeAnim, anim::Channel* channel);
     };
 
 }

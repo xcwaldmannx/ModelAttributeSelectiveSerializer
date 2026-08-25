@@ -8,7 +8,7 @@
 
 using namespace mass;
 
-std::vector<anim::Animation> AnimationHandler::load(const std::string& filename, Configuration& config)
+anim::AnimationSet AnimationHandler::load(const std::string& filename, Configuration& config)
 {
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(filename, aiProcessPreset_TargetRealtime_MaxQuality);
@@ -18,24 +18,94 @@ std::vector<anim::Animation> AnimationHandler::load(const std::string& filename,
         throw std::runtime_error("could not load scene");
     }
 
-    if (!scene->HasAnimations()) return;
+    if (!scene->HasAnimations())
+    {
+        throw std::runtime_error("file has no animations");
+    }
 
-    std::vector<anim::Animation> animations;
+    anim::AnimationSet animationSet;
 
     const auto& sceneAnimations = scene->mAnimations;
 
     for (unsigned int i = 0; i < scene->mNumAnimations; i++)
     {
+        anim::Animation animation;
+
         const auto& sceneAnim = sceneAnimations[i];
-        processAnimation(sceneAnim);
+        processAnimation(sceneAnim, &animation);
+
+        animationSet.mAnimations.emplace(sceneAnim->mName.C_Str(), animation);
     }
 
-    return animations;
+    return animationSet;
 }
 
-anim::Animation AnimationHandler::processAnimation(aiAnimation* sceneAnim)
+void AnimationHandler::processAnimation(const aiAnimation* sceneAnim, anim::Animation* animation)
 {
-    anim::Animation animation;
+    animation->mDuration = static_cast<float>(sceneAnim->mDuration);
 
-    return animation;
+    animation->mTicksPerSecond = static_cast<float>(sceneAnim->mTicksPerSecond);
+
+    for (unsigned int i = 0; i < sceneAnim->mNumChannels; ++i)
+    {
+        const aiNodeAnim* nodeAnim = sceneAnim->mChannels[i];
+
+        anim::Channel channel;
+        processChannel(nodeAnim, &channel);
+
+        animation->mChannels.emplace(nodeAnim->mNodeName.C_Str(), std::move(channel));
+    }
+}
+
+void AnimationHandler::processChannel(const aiNodeAnim* nodeAnim, anim::Channel* channel)
+{
+    channel->mKeyPositions.reserve(nodeAnim->mNumPositionKeys);
+    channel->mKeyRotations.reserve(nodeAnim->mNumRotationKeys);
+    channel->mKeyScales.reserve(nodeAnim->mNumScalingKeys);
+
+    for (unsigned int i = 0; i < nodeAnim->mNumPositionKeys; ++i)
+    {
+        const auto& key = nodeAnim->mPositionKeys[i];
+
+        anim::PositionKey modelKey;
+
+        modelKey.mPosition[0] = key.mValue.x;
+        modelKey.mPosition[1] = key.mValue.y;
+        modelKey.mPosition[2] = key.mValue.z;
+
+        modelKey.mTimestamp = static_cast<float>(key.mTime);
+
+        channel->mKeyPositions.push_back(modelKey);
+    }
+
+    for (unsigned int i = 0; i < nodeAnim->mNumRotationKeys; ++i)
+    {
+        const auto& key = nodeAnim->mRotationKeys[i];
+
+        anim::RotationKey modelKey;
+
+        modelKey.mRotation[0] = key.mValue.x;
+        modelKey.mRotation[1] = key.mValue.y;
+        modelKey.mRotation[2] = key.mValue.z;
+        modelKey.mRotation[3] = key.mValue.w;
+
+        modelKey.mTimestamp = static_cast<float>(key.mTime);
+
+        channel->mKeyRotations.push_back(modelKey);
+    }
+
+    for (unsigned int i = 0; i < nodeAnim->mNumScalingKeys; ++i)
+    {
+        const auto& key = nodeAnim->mScalingKeys[i];
+
+        anim::ScaleKey modelKey;
+
+        modelKey.mScale[0] = key.mValue.x;
+        modelKey.mScale[1] = key.mValue.y;
+        modelKey.mScale[2] = key.mValue.z;
+
+        modelKey.mTimestamp = static_cast<float>(key.mTime);
+
+        channel->mKeyScales.push_back(modelKey);
+    }
 }
