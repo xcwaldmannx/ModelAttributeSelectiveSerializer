@@ -54,7 +54,7 @@ model::Model ModelHandler::load(const std::string& filename, Configuration& conf
     sActiveModel->mScenes.emplace(sceneName, modelScene);
     sActiveModelScene = &sActiveModel->mScenes.at(sceneName);
 
-    processScene(scene, &modelScene);
+    processScene(scene, sActiveModelScene);
 
     model::Model resultModel = *sActiveModel;
 
@@ -90,6 +90,19 @@ void ModelHandler::processNode(const aiNode* node, model::Node* modelNode)
 {
     const auto meshCount = node->mNumMeshes;
     const auto childNodeCount = node->mNumChildren;
+
+    const auto& nodeTrans = node->mTransformation;
+    auto& modelNodeTrans = modelNode->mTransform;
+
+    modelNodeTrans.a1 = nodeTrans.a1; modelNodeTrans.b1 = nodeTrans.b1;
+    modelNodeTrans.a2 = nodeTrans.a2; modelNodeTrans.b2 = nodeTrans.b2;
+    modelNodeTrans.a3 = nodeTrans.a3; modelNodeTrans.b3 = nodeTrans.b3;
+    modelNodeTrans.a4 = nodeTrans.a4; modelNodeTrans.b4 = nodeTrans.b4;
+
+    modelNodeTrans.c1 = nodeTrans.c1; modelNodeTrans.d1 = nodeTrans.d1;
+    modelNodeTrans.c2 = nodeTrans.c2; modelNodeTrans.d2 = nodeTrans.d2;
+    modelNodeTrans.c3 = nodeTrans.c3; modelNodeTrans.d3 = nodeTrans.d3;
+    modelNodeTrans.c4 = nodeTrans.c4; modelNodeTrans.d4 = nodeTrans.d4;
 
     for (unsigned int i = 0; i < meshCount; i++)
     {
@@ -153,29 +166,29 @@ std::pair<model::VertexArray, model::IndexArray> ModelHandler::getVerticesAndInd
         model::Vertex modelVertex;
 
         const auto& vertex = mesh->mVertices[vertexIndex];
-        modelVertex.mPosition[0] = vertex.x;
-        modelVertex.mPosition[1] = vertex.y;
-        modelVertex.mPosition[2] = vertex.z;
+        modelVertex.mPosition.x = vertex.x;
+        modelVertex.mPosition.y = vertex.y;
+        modelVertex.mPosition.z = vertex.z;
 
         if (mesh->HasNormals())
         {
             const auto& normal = mesh->mNormals[vertexIndex];
-            modelVertex.mNormal[0] = normal.x;
-            modelVertex.mNormal[1] = normal.y;
-            modelVertex.mNormal[2] = normal.z;
+            modelVertex.mNormal.x = normal.x;
+            modelVertex.mNormal.y = normal.y;
+            modelVertex.mNormal.z = normal.z;
         }
 
         if (mesh->HasTangentsAndBitangents())
         {
             const auto& tangent = mesh->mTangents[vertexIndex];
-            modelVertex.mTangent[0] = tangent.x;
-            modelVertex.mTangent[1] = tangent.y;
-            modelVertex.mTangent[2] = tangent.z;
+            modelVertex.mTangent.x = tangent.x;
+            modelVertex.mTangent.y = tangent.y;
+            modelVertex.mTangent.z = tangent.z;
 
             const auto& bitangent = mesh->mBitangents[vertexIndex];
-            modelVertex.mBitangent[0] = bitangent.x;
-            modelVertex.mBitangent[1] = bitangent.y;
-            modelVertex.mBitangent[2] = bitangent.z;
+            modelVertex.mBitangent.x = bitangent.x;
+            modelVertex.mBitangent.y = bitangent.y;
+            modelVertex.mBitangent.z = bitangent.z;
         }
 
         const unsigned int texCoordSet = 0;
@@ -183,8 +196,8 @@ std::pair<model::VertexArray, model::IndexArray> ModelHandler::getVerticesAndInd
         if (mesh->HasTextureCoords(texCoordSet))
         {
             const auto& texCoords = mesh->mTextureCoords[texCoordSet][vertexIndex];
-            modelVertex.mTexCoord[0] = texCoords.x;
-            modelVertex.mTexCoord[1] = texCoords.y;
+            modelVertex.mTexCoord.x = texCoords.x;
+            modelVertex.mTexCoord.y = texCoords.y;
         }
 
         const unsigned int colorSet = 0;
@@ -192,10 +205,10 @@ std::pair<model::VertexArray, model::IndexArray> ModelHandler::getVerticesAndInd
         if (mesh->HasVertexColors(colorSet))
         {
             const auto& color = mesh->mColors[colorSet][vertexIndex];
-            modelVertex.mColor[0] = color.r;
-            modelVertex.mColor[1] = color.g;
-            modelVertex.mColor[2] = color.b;
-            modelVertex.mColor[3] = color.a;
+            modelVertex.mColor.x = color.r;
+            modelVertex.mColor.y = color.g;
+            modelVertex.mColor.z = color.b;
+            modelVertex.mColor.w = color.a;
         }
 
         vertices[vertexIndex] = modelVertex;
@@ -234,15 +247,15 @@ void ModelHandler::processBones(const aiMesh* mesh, model::VertexArray& vertices
             const auto& boneTrans = bone->mOffsetMatrix;
             auto& ModelBoneTrans = modelBone.mOffsetMatrix;
 
-            ModelBoneTrans[0][0] = boneTrans.a1; ModelBoneTrans[0][1] = boneTrans.b1;
-            ModelBoneTrans[1][0] = boneTrans.a2; ModelBoneTrans[1][1] = boneTrans.b2;
-            ModelBoneTrans[2][0] = boneTrans.a3; ModelBoneTrans[2][1] = boneTrans.b3;
-            ModelBoneTrans[3][0] = boneTrans.a4; ModelBoneTrans[3][1] = boneTrans.b4;
+            ModelBoneTrans.a1 = boneTrans.a1; ModelBoneTrans.b1 = boneTrans.b1;
+            ModelBoneTrans.a2 = boneTrans.a2; ModelBoneTrans.b2 = boneTrans.b2;
+            ModelBoneTrans.a3 = boneTrans.a3; ModelBoneTrans.b3 = boneTrans.b3;
+            ModelBoneTrans.a4 = boneTrans.a4; ModelBoneTrans.b4 = boneTrans.b4;
 
-            ModelBoneTrans[0][2] = boneTrans.c1; ModelBoneTrans[0][3] = boneTrans.d1;
-            ModelBoneTrans[1][2] = boneTrans.c2; ModelBoneTrans[1][3] = boneTrans.d2;
-            ModelBoneTrans[2][2] = boneTrans.c3; ModelBoneTrans[2][3] = boneTrans.d3;
-            ModelBoneTrans[3][2] = boneTrans.c4; ModelBoneTrans[3][3] = boneTrans.d4;
+            ModelBoneTrans.c1 = boneTrans.c1; ModelBoneTrans.d1 = boneTrans.d1;
+            ModelBoneTrans.c2 = boneTrans.c2; ModelBoneTrans.d2 = boneTrans.d2;
+            ModelBoneTrans.c3 = boneTrans.c3; ModelBoneTrans.d3 = boneTrans.d3;
+            ModelBoneTrans.c4 = boneTrans.c4; ModelBoneTrans.d4 = boneTrans.d4;
 
             boneId = modelBone.mBoneId;
             sActiveModelScene->mBones[boneName] = modelBone;

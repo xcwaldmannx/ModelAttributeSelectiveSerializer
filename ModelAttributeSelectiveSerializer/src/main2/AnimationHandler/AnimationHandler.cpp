@@ -69,9 +69,9 @@ void AnimationHandler::processChannel(const aiNodeAnim* nodeAnim, anim::Channel*
 
         anim::PositionKey modelKey;
 
-        modelKey.mPosition[0] = key.mValue.x;
-        modelKey.mPosition[1] = key.mValue.y;
-        modelKey.mPosition[2] = key.mValue.z;
+        modelKey.mPosition.x = key.mValue.x;
+        modelKey.mPosition.y = key.mValue.y;
+        modelKey.mPosition.z = key.mValue.z;
 
         modelKey.mTimestamp = static_cast<float>(key.mTime);
 
@@ -84,10 +84,10 @@ void AnimationHandler::processChannel(const aiNodeAnim* nodeAnim, anim::Channel*
 
         anim::RotationKey modelKey;
 
-        modelKey.mRotation[0] = key.mValue.x;
-        modelKey.mRotation[1] = key.mValue.y;
-        modelKey.mRotation[2] = key.mValue.z;
-        modelKey.mRotation[3] = key.mValue.w;
+        modelKey.mRotation.x = key.mValue.x;
+        modelKey.mRotation.y = key.mValue.y;
+        modelKey.mRotation.z = key.mValue.z;
+        modelKey.mRotation.w = key.mValue.w;
 
         modelKey.mTimestamp = static_cast<float>(key.mTime);
 
@@ -100,9 +100,9 @@ void AnimationHandler::processChannel(const aiNodeAnim* nodeAnim, anim::Channel*
 
         anim::ScaleKey modelKey;
 
-        modelKey.mScale[0] = key.mValue.x;
-        modelKey.mScale[1] = key.mValue.y;
-        modelKey.mScale[2] = key.mValue.z;
+        modelKey.mScale.x = key.mValue.x;
+        modelKey.mScale.y = key.mValue.y;
+        modelKey.mScale.z = key.mValue.z;
 
         modelKey.mTimestamp = static_cast<float>(key.mTime);
 
