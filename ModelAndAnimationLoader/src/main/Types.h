@@ -592,6 +592,8 @@ namespace mal
 
             VertexArray mVertices;
             IndexArray mIndices;
+            math::Vec3 mBoundsMin;
+            math::Vec3 mBoundsMax;
 
             friend class mal::Loader;
             friend class mal::ModelHandler;

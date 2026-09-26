@@ -21,7 +21,13 @@ namespace mal
         static void processNode(const aiNode* scene, model::Node* modelNode);
         static void processMesh(const aiMesh* mesh, model::Mesh* modelMesh);
 
-        static std::pair<model::VertexArray, model::IndexArray> getVerticesAndIndices(const aiMesh* mesh);
+        static void getVertexData(
+            const aiMesh* mesh,
+            model::VertexArray& vertices,
+            model::IndexArray& indices,
+            math::Vec3& boundsMin,
+            math::Vec3& boundsMax);
+
         static void processBones(const aiMesh* mesh, model::VertexArray& vertices);
 
     private:

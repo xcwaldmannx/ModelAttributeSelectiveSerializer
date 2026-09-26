@@ -122,7 +122,7 @@ void ModelHandler::processNode(const aiNode* node, model::Node* modelNode)
 
         processMesh(mesh, &modelMesh);
 
-        modelNode->mMeshes.emplace(mesh->mName.C_Str(), std::move(modelMesh));
+        modelNode->mMeshes.emplace(mesh->mName.C_Str(), modelMesh);
     }
 
     for (unsigned int i = 0; i < childNodeCount; i++)
@@ -140,7 +140,9 @@ void ModelHandler::processMesh(const aiMesh* mesh, model::Mesh* modelMesh)
 {
     if (!mesh->HasPositions()) return;
 
-    auto [vertices, indices] = getVerticesAndIndices(mesh);
+    model::VertexArray vertices;
+    model::IndexArray indices;
+    getVertexData(mesh, vertices, indices, sActiveModel->mBoundsMin, sActiveModel->mBoundsMax);
 
     modelMesh->mVertexOffset = sVertexOffset;
     modelMesh->mVertexCount = vertices.size();
@@ -160,17 +162,18 @@ void ModelHandler::processMesh(const aiMesh* mesh, model::Mesh* modelMesh)
     sIndexOffset += indices.size();
 }
 
-std::pair<model::VertexArray, model::IndexArray> ModelHandler::getVerticesAndIndices(const aiMesh* mesh)
+void ModelHandler::getVertexData(
+        const aiMesh* mesh,
+        model::VertexArray& vertices,
+        model::IndexArray& indices,
+        math::Vec3& boundsMin,
+        math::Vec3& boundsMax)
 {
     const unsigned int vertexCount = mesh->mNumVertices;
     const unsigned int indexCount = mesh->mNumFaces * 3;
 
-    std::pair<model::VertexArray, model::IndexArray> verticesAndIndices = {};
-    verticesAndIndices.first.resize(vertexCount);
-    verticesAndIndices.second.reserve(indexCount);
-
-    auto& vertices = verticesAndIndices.first;
-    auto& indices = verticesAndIndices.second;
+    vertices.resize(vertexCount);
+    indices.reserve(indexCount);
 
     for (unsigned int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++)
     {
@@ -180,6 +183,14 @@ std::pair<model::VertexArray, model::IndexArray> ModelHandler::getVerticesAndInd
         modelVertex.mPosition.x = vertex.x;
         modelVertex.mPosition.y = vertex.y;
         modelVertex.mPosition.z = vertex.z;
+
+        if (vertex.x < boundsMin.x) boundsMin.x = vertex.x;
+        if (vertex.y < boundsMin.y) boundsMin.y = vertex.y;
+        if (vertex.z < boundsMin.z) boundsMin.z = vertex.z;
+
+        if (vertex.x > boundsMax.x) boundsMax.x = vertex.x;
+        if (vertex.y > boundsMax.y) boundsMax.y = vertex.y;
+        if (vertex.z > boundsMax.z) boundsMax.z = vertex.z;
 
         if (mesh->HasNormals())
         {
@@ -233,8 +244,6 @@ std::pair<model::VertexArray, model::IndexArray> ModelHandler::getVerticesAndInd
             indices.push_back(face.mIndices[j]);
         }
     }
-
-    return verticesAndIndices;
 }
 
 void ModelHandler::processBones(const aiMesh* mesh, model::VertexArray& vertices)
