@@ -550,6 +550,16 @@ namespace mal
                 return mIndices;
             }
 
+            math::Vec3 getBoundsMin() const
+            {
+                return mBoundsMin;
+            }
+
+            math::Vec3 getBoundsMax() const
+            {
+                return mBoundsMax;
+            }
+
             bool hasAnimations() const
             {
                 return mSceneElements & ANIMATION;
