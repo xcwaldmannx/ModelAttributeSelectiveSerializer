@@ -3,7 +3,7 @@
 #include <cmath>
 #include <ranges>
 
-using namespace mass;
+using namespace mal;
 
 AnimationPlayer::AnimationPlayer(const model::Model& model, const anim::AnimationSet& animationSet) :
     mModel(model), mAnimationSet(animationSet) {}

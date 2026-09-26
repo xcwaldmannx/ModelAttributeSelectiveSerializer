@@ -5,7 +5,7 @@
 
 #include <string>
 
-using namespace mass;
+using namespace mal;
 
 namespace fs = std::filesystem;
 
@@ -76,7 +76,7 @@ int main()
 		}
 	}
 
-	mass::serialize(config, inputFilepath, outputFilepath);
+	// mass::serialize(config, inputFilepath, outputFilepath);
 
 	return 0;
 }

@@ -6,7 +6,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
-using namespace mass;
+using namespace mal;
 
 anim::AnimationSet AnimationHandler::load(const std::string& filename, Configuration& config)
 {

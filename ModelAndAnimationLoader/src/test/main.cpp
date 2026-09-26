@@ -1,4 +1,4 @@
-#include "../main/Mass.h"
+#include "../main/Mal.h"
 
 #include <filesystem>
 #include <iostream>
@@ -10,7 +10,7 @@
 
 void test()
 {
-	mass::Configuration config{};
+	mal::Configuration config{};
 	config.mSupportedFileExtensions = { "gltf" };
 
 	const std::vector<std::string> files =
@@ -20,12 +20,12 @@ void test()
 
 	for (const auto& file : files)
 	{
-		mass::model::Model model = mass::m::load(file, config);
+		mal::model::Model model = mal::m::load(file, config);
 
-		mass::anim::AnimationSet animations = mass::a::load(file, config);
+		mal::anim::AnimationSet animations = mal::a::load(file, config);
 
-		mass::AnimationPlayer player(model, animations);
-		mass::math::Mat4 trans = mass::math::Mat4::identity();
+		mal::AnimationPlayer player(model, animations);
+		mal::math::Mat4 trans = mal::math::Mat4::identity();
 		player.setNodeTransform("tentacle_0", trans);
 	}
 }

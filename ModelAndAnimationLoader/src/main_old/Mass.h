@@ -4,7 +4,7 @@
 
 #include <string>
 
-namespace mass
+namespace mal
 {
 
 	void serialize(

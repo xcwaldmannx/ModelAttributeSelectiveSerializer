@@ -7,7 +7,7 @@
 
 #include "glm/vec3.hpp"
 
-namespace mass
+namespace mal
 {
 	inline constexpr std::string_view API_VERSION = "1.1.0";
 

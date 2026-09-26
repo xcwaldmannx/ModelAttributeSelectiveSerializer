@@ -2,7 +2,7 @@
 
 #include "../Types.h"
 
-namespace mass
+namespace mal
 {
 
     class AnimationPlayer

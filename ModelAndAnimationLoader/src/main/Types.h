@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace mass
+namespace mal
 {
     class ModelHandler;
     class AnimationHandler;
@@ -593,8 +593,8 @@ namespace mass
             VertexArray mVertices;
             IndexArray mIndices;
 
-            friend class mass::Loader;
-            friend class mass::ModelHandler;
+            friend class mal::Loader;
+            friend class mal::ModelHandler;
         };
     }
 
@@ -644,8 +644,8 @@ namespace mass
             std::unordered_map<std::string, Animation> mAnimations;
             std::set<std::string> mBones;
 
-            friend class mass::AnimationHandler;
-            friend class mass::AnimationPlayer;
+            friend class mal::AnimationHandler;
+            friend class mal::AnimationPlayer;
         };
     }
 

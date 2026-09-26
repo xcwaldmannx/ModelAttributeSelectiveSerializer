@@ -7,7 +7,7 @@
 
 #include <assimp/scene.h>
 
-namespace mass
+namespace mal
 {
 
     class ModelHandler

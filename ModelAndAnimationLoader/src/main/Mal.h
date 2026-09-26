@@ -4,7 +4,7 @@
 #include "ModelHandler/ModelHandler.h"
 #include "AnimationPlayer/AnimationPlayer.h"
 
-namespace mass
+namespace mal
 {
 
     using m = ModelHandler;

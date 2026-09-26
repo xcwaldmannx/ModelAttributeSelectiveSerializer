@@ -85,11 +85,26 @@ file(GLOB TEST_SOURCES CONFIGURE_DEPENDS
 add_executable(${TEST_TARGET} ${TEST_SOURCES})
 target_link_libraries(${TEST_TARGET} PRIVATE ${LIB_TARGET})
 
-# ---- Install ----
+# ---- Install Process ----
 include(GNUInstallDirs)
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/install" CACHE PATH "Install path" FORCE)
 
+# --- Clean ----
+install(CODE "
+    message(STATUS \"Cleaning old install directory: \${CMAKE_INSTALL_PREFIX}\")
+
+    # Safely prevent deleting your entire hard drive if the prefix is empty or root
+    if(\"\${CMAKE_INSTALL_PREFIX}\" STREQUAL \"\" OR \"\${CMAKE_INSTALL_PREFIX}\" STREQUAL \"/\")
+        message(FATAL_ERROR \"Safety check failed: CMAKE_INSTALL_PREFIX is empty or root!\")
+    endif()
+
+    # Delete the directory and recreate it empty
+    file(REMOVE_RECURSE \"\${CMAKE_INSTALL_PREFIX}\")
+    file(MAKE_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}\")
+")
+
+# ---- Install ----
 install(TARGETS
         ${LIB_TARGET}
         ${EXEC_TARGET}

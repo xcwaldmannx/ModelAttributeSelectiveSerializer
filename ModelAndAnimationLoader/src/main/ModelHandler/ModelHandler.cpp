@@ -9,7 +9,7 @@
 
 namespace fs = std::filesystem;
 
-using namespace mass;
+using namespace mal;
 
 model::Model ModelHandler::load(const std::string& filename, Configuration& config)
 {
