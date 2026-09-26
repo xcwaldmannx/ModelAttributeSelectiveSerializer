@@ -1,12 +1,12 @@
 ﻿cmake_minimum_required(VERSION 3.12)
-project(ModelAttributeSelectiveSerializer VERSION 1.0.0 LANGUAGES CXX)
+project(ModelAndAnimationLoader VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ---- Vendors ----
-set(VENDORS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ModelAttributeSelectiveSerializer/vendor")
+set(VENDORS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ModelAndAnimationLoader/vendor")
 
 include(FetchContent)
 
@@ -40,7 +40,7 @@ target_include_directories(nlohmann_json
 add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
 
 # ---- Library ----
-set(LIB_TARGET ModelAttributeSelectiveSerializer)
+set(LIB_TARGET ModelAndAnimationLoader)
 
 file(GLOB_RECURSE LIB_SOURCES CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}/src/main/*.cpp"

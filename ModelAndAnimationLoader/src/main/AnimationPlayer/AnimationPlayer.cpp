@@ -8,6 +8,23 @@ using namespace mass;
 AnimationPlayer::AnimationPlayer(const model::Model& model, const anim::AnimationSet& animationSet) :
     mModel(model), mAnimationSet(animationSet) {}
 
+void AnimationPlayer::setDefaultScene()
+{
+    mCurrentScene = &mModel.getDefaultScene();
+
+    mBoneTransforms.assign(mCurrentScene->mBones.size(), math::Mat4::identity());
+
+    if (!mCurrentScene->mNodes.empty())
+    {
+        const auto& root = mCurrentScene->mNodes.begin()->second;
+        mInverseRootTransform = root.mTransform.inverse();
+    }
+    else
+    {
+        mInverseRootTransform = math::Mat4::identity();
+    }
+}
+
 void AnimationPlayer::setScene(const std::string& name)
 {
     mCurrentScene = &mModel.getScene(name);
@@ -54,7 +71,14 @@ void AnimationPlayer::update(const float delta)
 
 void AnimationPlayer::setNodeTransform(const std::string& name, const math::Mat4& transform)
 {
-    mNodeTransforms[name] = transform;
+    if (mAnimationSet.mBones.contains(name))
+    {
+        mNodeTransforms[name] = transform;
+    }
+    else
+    {
+        throw std::runtime_error("node name does not exist.");
+    }
 }
 
 const std::vector<math::Mat4>& AnimationPlayer::getBoneTransforms() const

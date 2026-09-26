@@ -34,6 +34,14 @@ anim::AnimationSet AnimationHandler::load(const std::string& filename, Configura
         const auto& sceneAnim = sceneAnimations[i];
         processAnimation(sceneAnim, &animation);
 
+        for (const auto& [name, channel] : animation.mChannels)
+        {
+            if (!animationSet.mBones.contains(name))
+            {
+                animationSet.mBones.emplace(name);
+            }
+        }
+
         animationSet.mAnimations.emplace(sceneAnim->mName.C_Str(), animation);
     }
 

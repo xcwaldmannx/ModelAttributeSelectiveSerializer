@@ -4,13 +4,16 @@
 #include <cmath>
 #include <string>
 #include <unordered_map>
+#include <set>
+#include <stdexcept>
 #include <vector>
-#include <bits/valarray_after.h>
 
 namespace mass
 {
     class ModelHandler;
     class AnimationHandler;
+    class AnimationPlayer;
+    class Loader;
 
     struct Configuration
     {
@@ -258,17 +261,17 @@ namespace mass
                 const float yy = q.y * q.y;  const float xy = q.x * q.y;  const float wy = q.w * q.y;
                 const float zz = q.z * q.z;  const float yz = q.y * q.z;  const float wz = q.w * q.z;
 
-                float rA1 = 1.0f - 2.0f * (yy + zz);
-                float rB1 = 2.0f * (xy - wz);
-                float rC1 = 2.0f * (xz + wy);
+                const float rA1 = 1.0f - 2.0f * (yy + zz);
+                const float rB1 = 2.0f * (xy - wz);
+                const float rC1 = 2.0f * (xz + wy);
 
-                float rA2 = 2.0f * (xy + wz);
-                float rB2 = 1.0f - 2.0f * (xx + zz);
-                float rC2 = 2.0f * (yz - wx);
+                const float rA2 = 2.0f * (xy + wz);
+                const float rB2 = 1.0f - 2.0f * (xx + zz);
+                const float rC2 = 2.0f * (yz - wx);
 
-                float rA3 = 2.0f * (xz - wy);
-                float rB3 = 2.0f * (yz + wx);
-                float rC3 = 1.0f - 2.0f * (xx + yy);
+                const float rA3 = 2.0f * (xz - wy);
+                const float rB3 = 2.0f * (yz + wx);
+                const float rC3 = 1.0f - 2.0f * (xx + yy);
 
                 Mat4 result;
 
@@ -304,39 +307,56 @@ namespace mass
 
             Mat4 inverse() const
             {
-                const float s0 = a3 * b4 - b3 * a4;
-                const float s1 = a3 * c4 - c3 * a4;
-                const float s2 = a3 * d4 - d3 * a4;
-                const float s3 = b3 * c4 - c3 * b4;
-                const float s4 = b3 * d4 - d3 * b4;
+                const float s0 = c1 * d2 - d1 * c2;
+                const float s1 = c1 * d3 - d1 * c3;
+                const float s2 = c1 * d4 - d1 * c4;
+                const float s3 = c2 * d3 - d2 * c3;
+                const float s4 = c2 * d4 - d2 * c4;
                 const float s5 = c3 * d4 - d3 * c4;
 
-                const float c0 = a1 * b2 - b1 * a2;
-                const float c1 = a1 * c2 - c1 * a2;
-                const float c2 = a1 * d2 - d1 * a2;
-                const float c3 = b1 * c2 - c1 * b2;
-                const float c4 = b1 * d2 - d1 * b2;
-                const float c5 = c1 * d2 - d1 * c2;
+                const float t0 = a1 * b2 - b1 * a2;
+                const float t1 = a1 * b3 - b1 * a3;
+                const float t2 = a1 * b4 - b1 * a4;
+                const float t3 = a2 * b3 - b2 * a3;
+                const float t4 = a2 * b4 - b2 * a4;
+                const float t5 = a3 * b4 - b3 * a4;
 
-                const float det = c0 * s5 - c1 * s4 + c2 * s3 + c3 * s2 - c4 * s1 + c5 * s0;
+                const float det =
+                      t0 * s5
+                    - t1 * s4
+                    + t2 * s3
+                    + t3 * s2
+                    - t4 * s1
+                    + t5 * s0;
 
-                if (det == 0.0f)
+                if (std::abs(det) < 1e-8f)
                 {
                     return Mat4();
                 }
 
                 const float invDet = 1.0f / det;
+
                 Mat4 result;
 
-                result.a1 = ( b2 * s5 - c2 * s4 + d2 * s3) * invDet;  result.a2 = (-b1 * s5 + c1 * s4 - d1 * s3) * invDet;
-                result.b1 = (-a2 * s5 + c2 * s2 - d2 * s1) * invDet;  result.b2 = ( a1 * s5 - c1 * s2 + d1 * s1) * invDet;
-                result.c1 = ( a2 * s4 - b2 * s2 + d2 * s0) * invDet;  result.c2 = (-a1 * s4 + b1 * s2 - d1 * s0) * invDet;
-                result.d1 = (-a2 * s3 + b2 * s1 - c2 * s0) * invDet;  result.d2 = ( a1 * s3 - b1 * s1 + c1 * s0) * invDet;
+                result.a1 = ( b2 * s5 - b3 * s4 + b4 * s3) * invDet;
+                result.a2 = (-a2 * s5 + a3 * s4 - a4 * s3) * invDet;
+                result.a3 = ( d2 * t5 - d3 * t4 + d4 * t3) * invDet;
+                result.a4 = (-c2 * t5 + c3 * t4 - c4 * t3) * invDet;
 
-                result.a3 = ( b4 * c5 - c4 * c4 + d4 * c3) * invDet;  result.a4 = (-b3 * c5 + c3 * c4 - d3 * c3) * invDet;
-                result.b3 = (-a4 * c5 + c4 * c2 - d4 * c1) * invDet;  result.b4 = ( a3 * c5 - c3 * c2 + d3 * c1) * invDet;
-                result.c3 = ( a4 * c4 - b4 * c2 + d4 * c0) * invDet;  result.c4 = (-a3 * c4 + b3 * c2 - d3 * c0) * invDet;
-                result.d3 = (-a4 * c3 + b4 * c1 - c4 * c0) * invDet;  result.d4 = ( a3 * c3 - b3 * c1 + c3 * c0) * invDet;
+                result.b1 = (-b1 * s5 + b3 * s2 - b4 * s1) * invDet;
+                result.b2 = ( a1 * s5 - a3 * s2 + a4 * s1) * invDet;
+                result.b3 = (-d1 * t5 + d3 * t2 - d4 * t1) * invDet;
+                result.b4 = ( c1 * t5 - c3 * t2 + c4 * t1) * invDet;
+
+                result.c1 = ( b1 * s4 - b2 * s2 + b4 * s0) * invDet;
+                result.c2 = (-a1 * s4 + a2 * s2 - a4 * s0) * invDet;
+                result.c3 = ( d1 * t4 - d2 * t2 + d4 * t0) * invDet;
+                result.c4 = (-c1 * t4 + c2 * t2 - c4 * t0) * invDet;
+
+                result.d1 = (-b1 * s3 + b2 * s1 - b3 * s0) * invDet;
+                result.d2 = ( a1 * s3 - a2 * s1 + a3 * s0) * invDet;
+                result.d3 = (-d1 * t3 + d2 * t1 - d3 * t0) * invDet;
+                result.d4 = ( c1 * t3 - c2 * t1 + c3 * t0) * invDet;
 
                 return result;
             }
@@ -508,9 +528,16 @@ namespace mass
         class Model
         {
         public:
+            const Scene& getDefaultScene() const
+            {
+                if (mScenes.contains("Scene")) return mScenes.at("Scene");
+                throw std::runtime_error("Scene not found");
+            }
+
             const Scene& getScene(const std::string& scene) const
             {
-                return mScenes.at(scene);
+                if (mScenes.contains(scene)) return mScenes.at(scene);
+                throw std::runtime_error("Scene not found");
             }
 
             const VertexArray& getVertices() const
@@ -566,6 +593,7 @@ namespace mass
             VertexArray mVertices;
             IndexArray mIndices;
 
+            friend class mass::Loader;
             friend class mass::ModelHandler;
         };
     }
@@ -614,8 +642,10 @@ namespace mass
 
         private:
             std::unordered_map<std::string, Animation> mAnimations;
+            std::set<std::string> mBones;
 
             friend class mass::AnimationHandler;
+            friend class mass::AnimationPlayer;
         };
     }
 

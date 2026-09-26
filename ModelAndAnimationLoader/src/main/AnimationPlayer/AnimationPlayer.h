@@ -10,6 +10,7 @@ namespace mass
     public:
         AnimationPlayer(const model::Model& model, const anim::AnimationSet& animationSet);
 
+        void setDefaultScene();
         void setScene(const std::string& name);
 
         void play(const std::string& name);

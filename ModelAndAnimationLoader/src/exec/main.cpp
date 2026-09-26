@@ -1,4 +1,4 @@
-#include "../main/Mass.h"
+#include "../main_old/Mass.h"
 
 #include <filesystem>
 #include <iostream>

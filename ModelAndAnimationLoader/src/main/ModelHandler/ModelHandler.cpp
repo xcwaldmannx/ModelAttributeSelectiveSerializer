@@ -76,6 +76,17 @@ model::Model ModelHandler::load(const std::string& filename, Configuration& conf
     return resultModel;
 }
 
+void ModelHandler::categorize(const aiScene* scene)
+{
+    if (scene->HasAnimations()) sActiveModel->mSceneElements |= ANIMATION;
+    if (scene->HasCameras())    sActiveModel->mSceneElements |= CAMERA;
+    if (scene->HasLights())     sActiveModel->mSceneElements |= LIGHT;
+    if (scene->HasMaterials())  sActiveModel->mSceneElements |= MATERIAL;
+    if (scene->HasMeshes())     sActiveModel->mSceneElements |= MESH;
+    if (scene->HasSkeletons())  sActiveModel->mSceneElements |= SKELETON;
+    if (scene->HasTextures())   sActiveModel->mSceneElements |= TEXTURE;
+}
+
 void ModelHandler::processScene(const aiScene* scene, model::Scene* modelScene)
 {
     const auto& node = scene->mRootNode;

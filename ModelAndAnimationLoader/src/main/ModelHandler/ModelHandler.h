@@ -16,6 +16,7 @@ namespace mass
         static model::Model load(const std::string& filename, Configuration& config);
 
     private:
+        static void categorize(const aiScene* scene);
         static void processScene(const aiScene* scene, model::Scene* modelScene);
         static void processNode(const aiNode* scene, model::Node* modelNode);
         static void processMesh(const aiMesh* mesh, model::Mesh* modelMesh);
