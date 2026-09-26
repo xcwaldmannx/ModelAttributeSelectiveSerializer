@@ -1,6 +1,6 @@
 #include "Serializer.h"
 
-#include "FileHandler/FileHandler.h"
+#include "FileHandler/ModelHandler.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -130,6 +130,6 @@ void Serializer::serialize(
 
 	const std::string data = json.dump(2);
 
-	FileHandler fileHandler;
+	ModelHandler fileHandler;
 	fileHandler.write(data, outputFilepath);
 }
