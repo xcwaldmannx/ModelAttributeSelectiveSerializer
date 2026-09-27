@@ -6,9 +6,4 @@
 
 namespace mal
 {
-
-    using m = ModelHandler;
-    using a = AnimationHandler;
-    using p = AnimationPlayer;
-
 }

@@ -12,16 +12,16 @@ void AnimationPlayer::setDefaultScene()
 {
     mCurrentScene = &mModel.getDefaultScene();
 
-    mBoneTransforms.assign(mCurrentScene->mBones.size(), math::Mat4::identity());
+    mBoneTransforms.assign(mCurrentScene->mBones.size(), glm::mat4(1.0));
 
     if (!mCurrentScene->mNodes.empty())
     {
         const auto& root = mCurrentScene->mNodes.begin()->second;
-        mInverseRootTransform = root.mTransform.inverse();
+        mInverseRootTransform = glm::inverse(root.mTransform);
     }
     else
     {
-        mInverseRootTransform = math::Mat4::identity();
+        mInverseRootTransform = glm::mat4(1.0);
     }
 }
 
@@ -29,16 +29,16 @@ void AnimationPlayer::setScene(const std::string& name)
 {
     mCurrentScene = &mModel.getScene(name);
 
-    mBoneTransforms.assign(mCurrentScene->mBones.size(), math::Mat4::identity());
+    mBoneTransforms.assign(mCurrentScene->mBones.size(), glm::mat4(1.0));
 
     if (!mCurrentScene->mNodes.empty())
     {
         const auto& root = mCurrentScene->mNodes.begin()->second;
-        mInverseRootTransform = root.mTransform.inverse();
+        mInverseRootTransform = glm::inverse(root.mTransform);
     }
     else
     {
-        mInverseRootTransform = math::Mat4::identity();
+        mInverseRootTransform = glm::mat4(1.0);
     }
 }
 
@@ -65,11 +65,11 @@ void AnimationPlayer::update(const float delta)
 
     for (const auto& [rootName, rootNode] : mCurrentScene->mNodes)
     {
-        updateNode(rootName, rootNode, math::Mat4::identity());
+        updateNode(rootName, rootNode, glm::mat4(1.0));
     }
 }
 
-void AnimationPlayer::setNodeTransform(const std::string& name, const math::Mat4& transform)
+void AnimationPlayer::setNodeTransform(const std::string& name, const glm::mat4& transform)
 {
     if (mAnimationSet.mBones.contains(name))
     {
@@ -81,14 +81,14 @@ void AnimationPlayer::setNodeTransform(const std::string& name, const math::Mat4
     }
 }
 
-const std::vector<math::Mat4>& AnimationPlayer::getBoneTransforms() const
+const std::vector<glm::mat4>& AnimationPlayer::getBoneTransforms() const
 {
     return mBoneTransforms;
 }
 
-void AnimationPlayer::updateNode(const std::string& name, const model::Node& node, const math::Mat4& parentTransform)
+void AnimationPlayer::updateNode(const std::string& name, const model::Node& node, const glm::mat4& parentTransform)
 {
-    math::Mat4 localTransform = node.mTransform;
+    glm::mat4 localTransform = node.mTransform;
 
     if (const auto channelIt = mCurrentAnimation->mChannels.find(name); channelIt != mCurrentAnimation->mChannels.end())
     {
@@ -100,7 +100,7 @@ void AnimationPlayer::updateNode(const std::string& name, const model::Node& nod
         localTransform = localTransform * transformIt->second;
     }
 
-    const math::Mat4 globalTransform = parentTransform * localTransform;
+    const glm::mat4 globalTransform = parentTransform * localTransform;
 
     if (const auto boneIt = mCurrentScene->mBones.find(name); boneIt != mCurrentScene->mBones.end())
     {
@@ -118,20 +118,24 @@ void AnimationPlayer::updateNode(const std::string& name, const model::Node& nod
     }
 }
 
-math::Mat4 AnimationPlayer::sampleChannel(const anim::Channel& channel, const float time)
+glm::mat4 AnimationPlayer::sampleChannel(const anim::Channel& channel, const float time)
 {
-    const math::Vec3 position = samplePosition(channel, time);
-    const math::Quat rotation = sampleRotation(channel, time);
-    const math::Vec3 scale    = sampleScale(channel, time);
+    const glm::vec3 position = samplePosition(channel, time);
+    const glm::quat rotation = sampleRotation(channel, time);
+    const glm::vec3 scale    = sampleScale(channel, time);
 
-    return math::Mat4::identity().translate(position).rotate(rotation).scale(scale);
+    const glm::mat4 T = glm::translate(glm::mat4(1.0), position);
+    const glm::mat4 R = glm::mat4_cast(rotation);
+    const glm::mat4 S = glm::scale(glm::mat4(1.0), scale);
+
+    return T * R * S;
 }
 
-math::Vec3 AnimationPlayer::samplePosition(const anim::Channel& channel, const float time)
+glm::vec3 AnimationPlayer::samplePosition(const anim::Channel& channel, const float time)
 {
     const auto& keys = channel.mKeyPositions;
 
-    if (keys.empty()) return math::Vec3{ 0.0f, 0.0f, 0.0f };
+    if (keys.empty()) return glm::vec3{ 0.0f, 0.0f, 0.0f };
 
     if (keys.size() == 1)
     {
@@ -154,21 +158,21 @@ math::Vec3 AnimationPlayer::samplePosition(const anim::Channel& channel, const f
 
     const float factor = duration > 0.0f ? (time - previous.mTimestamp) / duration : 0.0f;
 
-    return math::lerp(previous.mPosition, next.mPosition, factor);
+    return glm::mix(previous.mPosition, next.mPosition, factor);
 }
 
-math::Quat AnimationPlayer::sampleRotation(const anim::Channel& channel, const float time)
+glm::quat AnimationPlayer::sampleRotation(const anim::Channel& channel, const float time)
 {
     const auto& keys = channel.mKeyRotations;
 
     if (keys.empty())
     {
-        return math::Quat{ 0.0f, 0.0f, 0.0f, 1.0f };
+        return glm::quat{ 0.0f, 0.0f, 0.0f, 1.0f };
     }
 
     if (keys.size() == 1)
     {
-        return keys.front().mRotation.normalize();
+        return glm::normalize(keys.front().mRotation);
     }
 
     size_t nextIndex = 1;
@@ -177,7 +181,7 @@ math::Quat AnimationPlayer::sampleRotation(const anim::Channel& channel, const f
 
     if (nextIndex >= keys.size())
     {
-        return keys.back().mRotation.normalize();
+        return glm::normalize(keys.back().mRotation);
     }
 
     const auto& previous = keys[nextIndex - 1];
@@ -187,14 +191,14 @@ math::Quat AnimationPlayer::sampleRotation(const anim::Channel& channel, const f
 
     const float factor = duration > 0.0f ? (time - previous.mTimestamp) / duration : 0.0f;
 
-    return math::slerp(previous.mRotation, next.mRotation, factor);
+    return glm::slerp(previous.mRotation, next.mRotation, factor);
 }
 
-math::Vec3 AnimationPlayer::sampleScale(const anim::Channel& channel, const float time)
+glm::vec3 AnimationPlayer::sampleScale(const anim::Channel& channel, const float time)
 {
     const auto& keys = channel.mKeyScales;
 
-    if (keys.empty()) return math::Vec3{ 1.0f, 1.0f, 1.0f };
+    if (keys.empty()) return glm::vec3{ 1.0f, 1.0f, 1.0f };
 
     if (keys.size() == 1)
     {
@@ -217,5 +221,5 @@ math::Vec3 AnimationPlayer::sampleScale(const anim::Channel& channel, const floa
 
     const float factor = duration > 0.0f ? (time - previous.mTimestamp) / duration : 0.0f;
 
-    return math::lerp(previous.mScale, next.mScale, factor);
+    return glm::mix(previous.mScale, next.mScale, factor);
 }

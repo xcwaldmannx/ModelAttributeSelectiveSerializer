@@ -102,18 +102,10 @@ void ModelHandler::processNode(const aiNode* node, model::Node* modelNode)
     const auto meshCount = node->mNumMeshes;
     const auto childNodeCount = node->mNumChildren;
 
-    const auto& nodeTrans = node->mTransformation;
-    auto& modelNodeTrans = modelNode->mTransform;
+    const auto& src = node->mTransformation;
+    auto& dst = modelNode->mTransform;
 
-    modelNodeTrans.a1 = nodeTrans.a1; modelNodeTrans.b1 = nodeTrans.b1;
-    modelNodeTrans.a2 = nodeTrans.a2; modelNodeTrans.b2 = nodeTrans.b2;
-    modelNodeTrans.a3 = nodeTrans.a3; modelNodeTrans.b3 = nodeTrans.b3;
-    modelNodeTrans.a4 = nodeTrans.a4; modelNodeTrans.b4 = nodeTrans.b4;
-
-    modelNodeTrans.c1 = nodeTrans.c1; modelNodeTrans.d1 = nodeTrans.d1;
-    modelNodeTrans.c2 = nodeTrans.c2; modelNodeTrans.d2 = nodeTrans.d2;
-    modelNodeTrans.c3 = nodeTrans.c3; modelNodeTrans.d3 = nodeTrans.d3;
-    modelNodeTrans.c4 = nodeTrans.c4; modelNodeTrans.d4 = nodeTrans.d4;
+    std::memcpy(&dst, &src, sizeof(float) * 16);
 
     for (unsigned int i = 0; i < meshCount; i++)
     {
@@ -166,8 +158,8 @@ void ModelHandler::getVertexData(
         const aiMesh* mesh,
         model::VertexArray& vertices,
         model::IndexArray& indices,
-        math::Vec3& boundsMin,
-        math::Vec3& boundsMax)
+        glm::vec3& boundsMin,
+        glm::vec3& boundsMax)
 {
     const unsigned int vertexCount = mesh->mNumVertices;
     const unsigned int indexCount = mesh->mNumFaces * 3;
@@ -241,7 +233,7 @@ void ModelHandler::getVertexData(
         const aiFace& face = mesh->mFaces[f];
         for (unsigned int j = 0; j < face.mNumIndices; j++)
         {
-            indices.push_back(face.mIndices[j]);
+            indices.push_back(face.mIndices[j] + sVertexOffset);
         }
     }
 }
@@ -264,18 +256,10 @@ void ModelHandler::processBones(const aiMesh* mesh, model::VertexArray& vertices
             model::Bone modelBone;
             modelBone.mBoneId = static_cast<int>(sActiveModelScene->mBones.size());
 
-            const auto& boneTrans = bone->mOffsetMatrix;
-            auto& ModelBoneTrans = modelBone.mOffsetMatrix;
+            const auto& src = bone->mOffsetMatrix;
+            auto& dst = modelBone.mOffsetMatrix;
 
-            ModelBoneTrans.a1 = boneTrans.a1; ModelBoneTrans.b1 = boneTrans.b1;
-            ModelBoneTrans.a2 = boneTrans.a2; ModelBoneTrans.b2 = boneTrans.b2;
-            ModelBoneTrans.a3 = boneTrans.a3; ModelBoneTrans.b3 = boneTrans.b3;
-            ModelBoneTrans.a4 = boneTrans.a4; ModelBoneTrans.b4 = boneTrans.b4;
-
-            ModelBoneTrans.c1 = boneTrans.c1; ModelBoneTrans.d1 = boneTrans.d1;
-            ModelBoneTrans.c2 = boneTrans.c2; ModelBoneTrans.d2 = boneTrans.d2;
-            ModelBoneTrans.c3 = boneTrans.c3; ModelBoneTrans.d3 = boneTrans.d3;
-            ModelBoneTrans.c4 = boneTrans.c4; ModelBoneTrans.d4 = boneTrans.d4;
+            std::memcpy(&dst, &src, sizeof(float) * 16);
 
             boneId = modelBone.mBoneId;
             sActiveModelScene->mBones[boneName] = modelBone;

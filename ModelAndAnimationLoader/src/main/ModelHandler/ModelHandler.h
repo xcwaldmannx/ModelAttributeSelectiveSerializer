@@ -25,8 +25,8 @@ namespace mal
             const aiMesh* mesh,
             model::VertexArray& vertices,
             model::IndexArray& indices,
-            math::Vec3& boundsMin,
-            math::Vec3& boundsMax);
+            glm::vec3& boundsMin,
+            glm::vec3& boundsMax);
 
         static void processBones(const aiMesh* mesh, model::VertexArray& vertices);
 

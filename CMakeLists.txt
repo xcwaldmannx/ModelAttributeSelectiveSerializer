@@ -16,14 +16,7 @@ include(FetchContent)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 # ---- glm ----
-FetchContent_Declare(
-        glm
-        GIT_REPOSITORY https://github.com/g-truc/glm.git
-        GIT_TAG        8d1fd52e5ab5590e2c81768ace50c72bae28f2ed # 1.0.3
-)
-set(GLM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(glm)
+find_package(glm REQUIRED)
 
 # ---- assimp ----
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)

@@ -1,7 +1,6 @@
 #include "../main/Mal.h"
 
 #include <filesystem>
-#include <iostream>
 
 #include <string>
 #include <vector>
@@ -20,13 +19,19 @@ void test()
 
 	for (const auto& file : files)
 	{
-		mal::model::Model model = mal::m::load(file, config);
+		mal::model::Model model = mal::ModelHandler::load(file, config);
 
-		mal::anim::AnimationSet animations = mal::a::load(file, config);
+		mal::anim::AnimationSet animations = mal::AnimationHandler::load(file, config);
 
 		mal::AnimationPlayer player(model, animations);
-		mal::math::Mat4 trans = mal::math::Mat4::identity();
+
+		player.setDefaultScene();
+		player.play("attack");
+
+		glm::mat4 trans = glm::mat4(1.0);
 		player.setNodeTransform("tentacle_0", trans);
+
+		player.update(0);
 	}
 }
 

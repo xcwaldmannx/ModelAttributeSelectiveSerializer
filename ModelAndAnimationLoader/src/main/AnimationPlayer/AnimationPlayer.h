@@ -17,17 +17,17 @@ namespace mal
 
         void update(const float delta);
 
-        void setNodeTransform(const std::string& name, const math::Mat4& transform);
+        void setNodeTransform(const std::string& name, const glm::mat4& transform);
 
-        const std::vector<math::Mat4>& getBoneTransforms() const;
+        const std::vector<glm::mat4>& getBoneTransforms() const;
 
     private:
-        void updateNode(const std::string& name, const model::Node& node, const math::Mat4& parentTransform);
+        void updateNode(const std::string& name, const model::Node& node, const glm::mat4& parentTransform);
 
-        static math::Mat4 sampleChannel(const anim::Channel& channel, const float time);
-        static math::Vec3 samplePosition(const anim::Channel& channel, const float time);
-        static math::Quat sampleRotation(const anim::Channel& channel, const float time);
-        static math::Vec3 sampleScale(const anim::Channel& channel, const float time);
+        static glm::mat4 sampleChannel(const anim::Channel& channel, const float time);
+        static glm::vec3 samplePosition(const anim::Channel& channel, const float time);
+        static glm::quat sampleRotation(const anim::Channel& channel, const float time);
+        static glm::vec3 sampleScale(const anim::Channel& channel, const float time);
 
     private:
         const model::Model& mModel;
@@ -37,9 +37,9 @@ namespace mal
         const anim::Animation* mCurrentAnimation = nullptr;
         float mCurrentTime = 0.0f;
 
-        math::Mat4 mInverseRootTransform;
-        std::vector<math::Mat4> mBoneTransforms;
-        std::unordered_map<std::string, math::Mat4> mNodeTransforms;
+        glm::mat4 mInverseRootTransform{};
+        std::vector<glm::mat4> mBoneTransforms;
+        std::unordered_map<std::string, glm::mat4> mNodeTransforms;
     };
 
 }
